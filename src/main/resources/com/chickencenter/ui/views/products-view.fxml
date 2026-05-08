@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.chickencenter.ui.controllers.ProductsController"
+      style="-fx-background-color: #F1F5F9; -fx-padding: 15;" spacing="15">
+
+    <!-- Header -->
+    <VBox style="-fx-background-color: #ffffff; -fx-padding: 12 20; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, #00000008, 3, 0, 0, 1);">
+        <Label text="Products" textFill="#0F172A">
+            <font>
+                <Font size="18" name="Segoe UI Bold"/>
+            </font>
+        </Label>
+    </VBox>
+
+    <!-- Form Section -->
+    <VBox style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 20; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
+        <HBox style="-fx-padding: 0 0 15 0;">
+            <Label text="Add / Edit Product" textFill="#0F172A">
+                <font>
+                    <Font size="14" name="Segoe UI Bold"/>
+                </font>
+            </Label>
+        </HBox>
+
+        <HBox spacing="20">
+            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                <Label text="Product Name" textFill="#64748b">
+                    <font>
+                        <Font size="12" name="Segoe UI"/>
+                    </font>
+                </Label>
+                <TextField fx:id="txtProductName" promptText="Enter product name"
+                           style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
+            </VBox>
+
+            <VBox spacing="5" prefWidth="120">
+                <Label text="Unit" textFill="#64748b">
+                    <font>
+                        <Font size="12" name="Segoe UI"/>
+                    </font>
+                </Label>
+                <ComboBox fx:id="cmbUnit" promptText="Select Unit" prefWidth="110"
+                          style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
+            </VBox>
+
+            <VBox spacing="5" prefWidth="150">
+                <Label text="Vendor" textFill="#64748b">
+                    <font>
+                        <Font size="12" name="Segoe UI"/>
+                    </font>
+                </Label>
+                <ComboBox fx:id="cmbVendor" promptText="Select Vendor" prefWidth="140"
+                          style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
+            </VBox>
+
+            <VBox spacing="5" prefWidth="100">
+                <Label text="Price" textFill="#64748b">
+                    <font>
+                        <Font size="12" name="Segoe UI"/>
+                    </font>
+                </Label>
+                <TextField fx:id="txtPrice" promptText="Enter price"
+                           style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
+            </VBox>
+
+            <VBox spacing="5" prefWidth="100">
+                <Label text="Bulk Qty &gt;" textFill="#64748b">
+                    <font>
+                        <Font size="12" name="Segoe UI"/>
+                    </font>
+                </Label>
+                <TextField fx:id="txtBulkThreshold" promptText="Qty threshold"
+                           style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
+            </VBox>
+
+            <VBox spacing="5" prefWidth="100">
+                <Label text="Bulk Price" textFill="#64748b">
+                    <font>
+                        <Font size="12" name="Segoe UI"/>
+                    </font>
+                </Label>
+                <TextField fx:id="txtBulkPrice" promptText="Bulk price"
+                           style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
+            </VBox>
+
+            <VBox spacing="5" alignment="BOTTOM_LEFT">
+                <Button fx:id="btnSave" text="Save" onAction="#saveProduct" prefWidth="100" prefHeight="38"
+                        style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13; -fx-font-weight: bold; -fx-cursor: hand;"/>
+            </VBox>
+
+            <VBox spacing="5" alignment="BOTTOM_LEFT">
+                <Button fx:id="btnClear" text="Clear" onAction="#clearForm" prefWidth="100" prefHeight="38"
+                        style="-fx-background-color: #64748b; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13; -fx-font-weight: bold; -fx-cursor: hand;"/>
+            </VBox>
+        </HBox>
+    </VBox>
+
+    <!-- Table Section -->
+    <VBox VBox.vgrow="ALWAYS" style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 12; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
+        <HBox style="-fx-padding: 0 0 10 0;">
+            <Label text="Product List" textFill="#0F172A">
+                <font>
+                    <Font size="14" name="Segoe UI Bold"/>
+                </font>
+            </Label>
+            <Region HBox.hgrow="ALWAYS"/>
+            <TextField fx:id="txtSearch" onKeyReleased="#searchProducts" promptText="Search..." prefWidth="180"
+                       style="-fx-background-radius: 5; -fx-padding: 6 10;"/>
+        </HBox>
+
+        <TableView fx:id="tblProducts" VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 4; -fx-table-cell-border-color: #e2e8f0;">
+            <columns>
+                <TableColumn fx:id="colProductName" text="Product" prefWidth="130" style="-fx-alignment: CENTER;"/>
+                <TableColumn fx:id="colVendor" text="Vendor" prefWidth="100" style="-fx-alignment: CENTER;"/>
+                <TableColumn fx:id="colStock" text="Stock" prefWidth="80" style="-fx-alignment: CENTER;"/>
+                <TableColumn fx:id="colPrice" text="Price" prefWidth="80" style="-fx-alignment: CENTER;"/>
+                <TableColumn fx:id="colBatchId" text="Batch" prefWidth="60" style="-fx-alignment: CENTER;"/>
+                <TableColumn fx:id="colBatchControl" text="Batch Control" prefWidth="100" style="-fx-alignment: CENTER;"/>
+                <TableColumn fx:id="colCreatedAt" text="Created" prefWidth="90" style="-fx-alignment: CENTER;"/>
+                <TableColumn fx:id="colLastModified" text="Modified" prefWidth="90" style="-fx-alignment: CENTER;"/>
+                <TableColumn fx:id="colAction" text="Action" prefWidth="120" minWidth="100" style="-fx-alignment: CENTER;"/>
+            </columns>
+        </TableView>
+    </VBox>
+
+</VBox>

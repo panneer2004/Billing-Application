@@ -1,0 +1,24 @@
+# IDE
+.idea/
+.settings/
+.project
+.classpath
+*.iml
+
+# Build
+out/
+target/
+*.class
+*.jar
+*.log
+
+# Database
+*.db
+*.db.sqbpro
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Launch4j
+launch4j.log

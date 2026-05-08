@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.chickencenter.ui.controllers.MainController"
+            stylesheets="@application.css"
+            styleClass="main-root">
+
+    <left>
+        <VBox prefWidth="290" styleClass="sidebar">
+            
+            <VBox alignment="CENTER_LEFT" prefHeight="120" styleClass="sidebar-logo">
+                <Text text="🐔" styleClass="logo-icon"/>
+                <Text text="JK Chicken Center" styleClass="logo-title"/>
+                <Text text="Billing Management" styleClass="logo-subtitle"/>
+            </VBox>
+
+            <ScrollPane styleClass="sidebar-scroll" VBox.vgrow="ALWAYS">
+                <VBox styleClass="sidebar-menu" spacing="6">
+                    <Label text="MAIN MENU" styleClass="menu-section-label"/>
+
+                    <Button fx:id="btnDashboard" onAction="#showDashboard" prefHeight="50" styleClass="nav-item-active">
+                        <graphic>
+                            <HBox spacing="14" alignment="CENTER_LEFT">
+                                <Text text="✦" styleClass="nav-icon-active"/>
+                                <Text text="Dashboard" styleClass="nav-text-active"/>
+                            </HBox>
+                        </graphic>
+                    </Button>
+
+                    <Button fx:id="btnBilling" onAction="#showBilling" prefHeight="50" styleClass="nav-item">
+                        <graphic>
+                            <HBox spacing="14" alignment="CENTER_LEFT">
+                                <Text text="🧾" styleClass="nav-icon"/>
+                                <Text text="Billing" styleClass="nav-text"/>
+                            </HBox>
+                        </graphic>
+                    </Button>
+
+                    <Button fx:id="btnSales" onAction="#showSales" prefHeight="50" styleClass="nav-item">
+                        <graphic>
+                            <HBox spacing="14" alignment="CENTER_LEFT">
+                                <Text text="📊" styleClass="nav-icon"/>
+                                <Text text="Sales" styleClass="nav-text"/>
+                            </HBox>
+                        </graphic>
+                    </Button>
+
+                    <Button fx:id="btnProducts" onAction="#showProducts" prefHeight="50" styleClass="nav-item">
+                        <graphic>
+                            <HBox spacing="14" alignment="CENTER_LEFT">
+                                <Text text="📦" styleClass="nav-icon"/>
+                                <Text text="Products" styleClass="nav-text"/>
+                            </HBox>
+                        </graphic>
+                    </Button>
+
+                    <Button fx:id="btnExpenses" onAction="#showExpenses" prefHeight="50" styleClass="nav-item">
+                        <graphic>
+                            <HBox spacing="14" alignment="CENTER_LEFT">
+                                <Text text="💳" styleClass="nav-icon"/>
+                                <Text text="Expenses" styleClass="nav-text"/>
+                            </HBox>
+                        </graphic>
+                    </Button>
+
+                    <Region prefHeight="15"/>
+
+                    <Label text="MANAGEMENT" styleClass="menu-section-label"/>
+
+                    <Button fx:id="btnStock" onAction="#showStock" prefHeight="50" styleClass="nav-item">
+                        <graphic>
+                            <HBox spacing="14" alignment="CENTER_LEFT">
+                                <Text text="🏭" styleClass="nav-icon"/>
+                                <Text text="Stock" styleClass="nav-text"/>
+                            </HBox>
+                        </graphic>
+                    </Button>
+
+                    <Button fx:id="btnPurchase" onAction="#showPurchase" prefHeight="50" styleClass="nav-item">
+                        <graphic>
+                            <HBox spacing="14" alignment="CENTER_LEFT">
+                                <Text text="🛒" styleClass="nav-icon"/>
+                                <Text text="Purchase" styleClass="nav-text"/>
+                            </HBox>
+                        </graphic>
+                    </Button>
+
+                    <Button fx:id="btnEmployees" onAction="#showEmployees" prefHeight="50" styleClass="nav-item">
+                        <graphic>
+                            <HBox spacing="14" alignment="CENTER_LEFT">
+                                <Text text="👤" styleClass="nav-icon"/>
+                                <Text text="Employees" styleClass="nav-text"/>
+                            </HBox>
+                        </graphic>
+                    </Button>
+
+                    <Button fx:id="btnVendors" onAction="#showVendors" prefHeight="50" styleClass="nav-item">
+                        <graphic>
+                            <HBox spacing="14" alignment="CENTER_LEFT">
+                                <Text text="🚚" styleClass="nav-icon"/>
+                                <Text text="Vendors" styleClass="nav-text"/>
+                            </HBox>
+                        </graphic>
+                    </Button>
+
+                    <Region VBox.vgrow="ALWAYS"/>
+
+                    <Separator styleClass="sidebar-separator"/>
+
+                    <Button fx:id="btnAccountSettings" onAction="#showAccountSettings" prefHeight="50" styleClass="nav-item">
+                        <graphic>
+                            <HBox spacing="14" alignment="CENTER_LEFT">
+                                <Text text="⚙" styleClass="nav-icon"/>
+                                <Text text="Account Settings" styleClass="nav-text"/>
+                            </HBox>
+                        </graphic>
+                    </Button>
+
+                    <VBox alignment="CENTER" styleClass="version-container">
+                        <Text text="v1.0" styleClass="version-text"/>
+                    </VBox>
+
+                </VBox>
+            </ScrollPane>
+        </VBox>
+    </left>
+
+    <center>
+        <StackPane fx:id="contentArea" style="-fx-padding: 20;"/>
+    </center>
+
+</BorderPane>

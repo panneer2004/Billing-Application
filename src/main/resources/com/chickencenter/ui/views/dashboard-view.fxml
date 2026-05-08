@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.shape.*?>
+
+<ScrollPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.chickencenter.ui.controllers.DashboardController"
+            fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED">
+    <VBox>
+        <VBox fx:id="mainContainer">
+
+            <!-- Product Consumption (Full Width) -->
+            <VBox fx:id="donutSection" spacing="12">
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Label fx:id="donutTitle" text="Product Consumption Analysis" style="-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: #0f172a; -fx-font-family: 'Segoe UI';"/>
+                </HBox>
+                <Label fx:id="donutSubtitle" text="Sales distribution by product" style="-fx-font-size: 12; -fx-text-fill: #94a3b8; -fx-font-family: 'Segoe UI';"/>
+                <StackPane fx:id="donutContainer" alignment="CENTER" style="-fx-padding: 10 0 10 0;"/>
+                <VBox fx:id="donutLegend" spacing="8" alignment="CENTER" style="-fx-padding: 10 0 0 0;"/>
+            </VBox>
+
+            <!-- Daily Sales Analysis (Full Width) -->
+            <VBox fx:id="lineSection" spacing="12">
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Label fx:id="lineTitle" text="Daily Sales Analysis" style="-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: #0f172a; -fx-font-family: 'Segoe UI';"/>
+                </HBox>
+                <Label fx:id="lineSubtitle" text="Sales performance over the last 7 days" style="-fx-font-size: 12; -fx-text-fill: #94a3b8; -fx-font-family: 'Segoe UI';"/>
+                <StackPane fx:id="lineContainer" alignment="CENTER" style="-fx-padding: 10 0;"/>
+            </VBox>
+
+        </VBox>
+    </VBox>
+</ScrollPane>

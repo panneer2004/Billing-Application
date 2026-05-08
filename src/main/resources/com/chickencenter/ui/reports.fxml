@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.chickencenter.ui.controllers.ReportsController"
+            style="-fx-background-color: #eef2f7;">
+
+    <top>
+        <VBox style="-fx-background-color: #ffffff; -fx-padding: 18 30; -fx-effect: dropshadow(gaussian, #00000008, 4, 0, 0, 2);">
+            <HBox>
+                <VBox>
+                    <Label text="Financial Reports" textFill="#1e3a5f">
+                        <font>
+                            <Font size="24" name="Segoe UI Bold"/>
+                        </font>
+                    </Label>
+                    <Label text="View sales, purchases, and profit/loss reports" textFill="#64748b" style="-fx-padding: 3 0 0 0;">
+                        <font>
+                            <Font size="13" name="Segoe UI"/>
+                        </font>
+                    </Label>
+                </VBox>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <VBox spacing="25" style="-fx-padding: 25;">
+            <VBox style="-fx-background-color: #ffffff; -fx-background-radius: 14; -fx-effect: dropshadow(gaussian, #00000006, 10, 0, 0, 4);">
+                <HBox spacing="20" style="-fx-padding: 20;">
+                    <VBox spacing="5">
+                        <Label text="From Date" textFill="#64748b">
+                            <font>
+                                <Font size="12" name="Segoe UI"/>
+                            </font>
+                        </Label>
+                        <DatePicker fx:id="dpStartDate" prefWidth="160" style="-fx-background-radius: 8;"/>
+                    </VBox>
+                    <VBox spacing="5">
+                        <Label text="To Date" textFill="#64748b">
+                            <font>
+                                <Font size="12" name="Segoe UI"/>
+                            </font>
+                        </Label>
+                        <DatePicker fx:id="dpEndDate" prefWidth="160" style="-fx-background-radius: 8;"/>
+                    </VBox>
+                    <Region prefWidth="30"/>
+                    <Button fx:id="btnGenerateReport" text="Generate Report" onAction="#generateReport" prefWidth="160" prefHeight="38"
+                            style="-fx-background-color: #6366f1; -fx-text-fill: white; -fx-background-radius: 10; -fx-font-weight: bold; -fx-cursor: hand;"/>
+                </HBox>
+            </VBox>
+
+            <HBox spacing="18">
+                <VBox alignment="CENTER" prefHeight="110" HBox.hgrow="ALWAYS" style="-fx-background-color: #ffffff; -fx-background-radius: 14; -fx-effect: dropshadow(gaussian, #00000006, 10, 0, 0, 4);">
+                    <VBox style="-fx-background-color: #10b981; -fx-padding: 15 20; -fx-background-radius: 14 14 0 0;" HBox.hgrow="ALWAYS">
+                        <Label text="Total Sales" textFill="white">
+                            <font>
+                                <Font size="13" name="Segoe UI"/>
+                            </font>
+                        </Label>
+                    </VBox>
+                    <VBox alignment="CENTER" style="-fx-padding: 15;">
+                        <Label fx:id="lblTotalSales" text="Rs.0.00" textFill="#1e3a5f">
+                            <font>
+                                <Font size="22" name="Segoe UI Bold"/>
+                            </font>
+                        </Label>
+                    </VBox>
+                </VBox>
+
+                <VBox alignment="CENTER" prefHeight="110" HBox.hgrow="ALWAYS" style="-fx-background-color: #ffffff; -fx-background-radius: 14; -fx-effect: dropshadow(gaussian, #00000006, 10, 0, 0, 4);">
+                    <VBox style="-fx-background-color: #f59e0b; -fx-padding: 15 20; -fx-background-radius: 14 14 0 0;">
+                        <Label text="Total Purchases" textFill="white">
+                            <font>
+                                <Font size="13" name="Segoe UI"/>
+                            </font>
+                        </Label>
+                    </VBox>
+                    <VBox alignment="CENTER" style="-fx-padding: 15;">
+                        <Label fx:id="lblTotalPurchases" text="Rs.0.00" textFill="#1e3a5f">
+                            <font>
+                                <Font size="22" name="Segoe UI Bold"/>
+                            </font>
+                        </Label>
+                    </VBox>
+                </VBox>
+
+                <VBox alignment="CENTER" prefHeight="110" HBox.hgrow="ALWAYS" style="-fx-background-color: #ffffff; -fx-background-radius: 14; -fx-effect: dropshadow(gaussian, #00000006, 10, 0, 0, 4);">
+                    <VBox style="-fx-background-color: #ef4444; -fx-padding: 15 20; -fx-background-radius: 14 14 0 0;">
+                        <Label text="Total Expenses" textFill="white">
+                            <font>
+                                <Font size="13" name="Segoe UI"/>
+                            </font>
+                        </Label>
+                    </VBox>
+                    <VBox alignment="CENTER" style="-fx-padding: 15;">
+                        <Label fx:id="lblTotalExpenses" text="Rs.0.00" textFill="#1e3a5f">
+                            <font>
+                                <Font size="22" name="Segoe UI Bold"/>
+                            </font>
+                        </Label>
+                    </VBox>
+                </VBox>
+
+                <VBox alignment="CENTER" prefHeight="110" HBox.hgrow="ALWAYS" style="-fx-background-color: #ffffff; -fx-background-radius: 14; -fx-effect: dropshadow(gaussian, #00000006, 10, 0, 0, 4);">
+                    <VBox style="-fx-background-color: #6366f1; -fx-padding: 15 20; -fx-background-radius: 14 14 0 0;">
+                        <Label text="Net Profit/Loss" textFill="white">
+                            <font>
+                                <Font size="13" name="Segoe UI"/>
+                            </font>
+                        </Label>
+                    </VBox>
+                    <VBox alignment="CENTER" style="-fx-padding: 15;">
+                        <Label fx:id="lblNetProfit" text="Rs.0.00" textFill="#1e3a5f">
+                            <font>
+                                <Font size="22" name="Segoe UI Bold"/>
+                            </font>
+                        </Label>
+                    </VBox>
+                </VBox>
+            </HBox>
+
+            <VBox style="-fx-background-color: #ffffff; -fx-background-radius: 14; -fx-effect: dropshadow(gaussian, #00000006, 10, 0, 0, 4);">
+                <VBox style="-fx-padding: 18;">
+                    <Label text="Sales Details" textFill="#1e3a5f">
+                        <font>
+                            <Font size="16" name="Segoe UI Bold"/>
+                        </font>
+                    </Label>
+                </VBox>
+                <Separator/>
+                <TableView fx:id="tblSalesReport" prefHeight="280" style="-fx-background-color: white;">
+                    <columns>
+                        <TableColumn fx:id="colSaleId" text="Sale ID" prefWidth="120"/>
+                        <TableColumn fx:id="colSaleDate" text="Date" prefWidth="200"/>
+                        <TableColumn fx:id="colSaleAmount" text="Amount" prefWidth="180"/>
+                        <TableColumn fx:id="colSaleStatus" text="Status" prefWidth="120"/>
+                    </columns>
+                </TableView>
+            </VBox>
+        </VBox>
+    </center>
+
+</BorderPane>

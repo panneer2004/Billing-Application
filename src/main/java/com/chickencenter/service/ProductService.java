@@ -2,12 +2,10 @@ package com.chickencenter.service;
 
 import com.chickencenter.dao.ProductDAO;
 import com.chickencenter.dao.PurchaseDAO;
-import com.chickencenter.dao.StockDAO;
 import com.chickencenter.dao.VendorDAO;
 import com.chickencenter.database.DatabaseConnection;
 import com.chickencenter.model.Product;
 import com.chickencenter.model.Purchase;
-import com.chickencenter.model.Stock;
 import com.chickencenter.model.Vendor;
 
 import java.sql.Connection;

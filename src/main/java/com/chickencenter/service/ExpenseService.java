@@ -2,8 +2,6 @@ package com.chickencenter.service;
 
 import com.chickencenter.dao.EmployeeDAO;
 import com.chickencenter.dao.EmployeeExpenseDAO;
-import com.chickencenter.dao.PurchaseBatchDAO;
-import com.chickencenter.dao.SaleDAO;
 import com.chickencenter.dao.ShopExpenseDAO;
 import com.chickencenter.dao.VendorDAO;
 import com.chickencenter.dao.VendorExpenseDAO;
@@ -23,8 +21,6 @@ public class ExpenseService {
     private final EmployeeDAO employeeDAO;
     private final EmployeeExpenseDAO employeeExpenseDAO;
     private final ShopExpenseDAO shopExpenseDAO;
-    private final SaleDAO saleDAO;
-    private final PurchaseBatchDAO purchaseBatchDAO;
 
     public ExpenseService() {
         this.vendorDAO = new VendorDAO();
@@ -32,8 +28,6 @@ public class ExpenseService {
         this.employeeDAO = new EmployeeDAO();
         this.employeeExpenseDAO = new EmployeeExpenseDAO();
         this.shopExpenseDAO = new ShopExpenseDAO();
-        this.saleDAO = new SaleDAO();
-        this.purchaseBatchDAO = new PurchaseBatchDAO();
     }
 
     public int createVendor(Vendor vendor) throws SQLException {
@@ -52,16 +46,8 @@ public class ExpenseService {
         vendorDAO.update(vendor);
     }
 
-    public void deleteVendor(int id) throws SQLException {
-        vendorDAO.delete(id);
-    }
-
     public int createVendorExpense(VendorExpense expense) throws SQLException {
         return vendorExpenseDAO.create(expense);
-    }
-
-    public List<VendorExpense> getVendorExpenses(int vendorId) throws SQLException {
-        return vendorExpenseDAO.findByVendorId(vendorId);
     }
 
     public List<VendorExpense> getAllVendorExpenses() throws SQLException {
@@ -72,16 +58,8 @@ public class ExpenseService {
         return vendorExpenseDAO.findByDateRange(start, end);
     }
 
-    public void updateVendorExpense(VendorExpense expense) throws SQLException {
-        vendorExpenseDAO.update(expense);
-    }
-
     public void deleteVendorExpense(int id) throws SQLException {
         vendorExpenseDAO.delete(id);
-    }
-
-    public double getTotalVendorExpenses() throws SQLException {
-        return vendorExpenseDAO.getTotalExpenses();
     }
 
     public int createEmployee(Employee employee) throws SQLException {
@@ -100,16 +78,8 @@ public class ExpenseService {
         employeeDAO.update(employee);
     }
 
-    public void deleteEmployee(int id) throws SQLException {
-        employeeDAO.delete(id);
-    }
-
     public int createEmployeeExpense(EmployeeExpense expense) throws SQLException {
         return employeeExpenseDAO.create(expense);
-    }
-
-    public List<EmployeeExpense> getEmployeeExpenses(int employeeId) throws SQLException {
-        return employeeExpenseDAO.findByEmployeeId(employeeId);
     }
 
     public List<EmployeeExpense> getAllEmployeeExpenses() throws SQLException {
@@ -120,16 +90,8 @@ public class ExpenseService {
         return employeeExpenseDAO.findByDateRange(start, end);
     }
 
-    public void updateEmployeeExpense(EmployeeExpense expense) throws SQLException {
-        employeeExpenseDAO.update(expense);
-    }
-
     public void deleteEmployeeExpense(int id) throws SQLException {
         employeeExpenseDAO.delete(id);
-    }
-
-    public double getTotalEmployeeExpenses() throws SQLException {
-        return employeeExpenseDAO.getTotalExpenses();
     }
 
     public int createShopExpense(ShopExpense expense) throws SQLException {
@@ -146,29 +108,5 @@ public class ExpenseService {
 
     public void updateShopExpense(ShopExpense expense) throws SQLException {
         shopExpenseDAO.update(expense);
-    }
-
-    public double getTotalShopExpenses() throws SQLException {
-        return shopExpenseDAO.getTotalExpenses();
-    }
-
-    public double getTotalExpenses() throws SQLException {
-        return getTotalVendorExpenses() + getTotalEmployeeExpenses() + getTotalShopExpenses();
-    }
-
-    public double getTotalPurchases() throws SQLException {
-        return purchaseBatchDAO.getTotalPurchaseAmount();
-    }
-
-    public double getTotalSales() throws SQLException {
-        return saleDAO.getTotalSalesAmount();
-    }
-
-    public double getProfitLoss() throws SQLException {
-        return getTotalSales() - getTotalPurchases();
-    }
-
-    public double getNetProfit() throws SQLException {
-        return getTotalSales() - getTotalPurchases() - getTotalExpenses();
     }
 }

@@ -2,7 +2,6 @@ package com.chickencenter.dao;
 
 import com.chickencenter.database.DatabaseConnection;
 import com.chickencenter.model.Sale;
-import com.chickencenter.model.SaleItem;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -52,20 +51,6 @@ public class SaleDAO {
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                sales.add(mapResultSetToSale(rs));
-            }
-        }
-        return sales;
-    }
-
-    public List<Sale> findByDate(LocalDate date) throws SQLException {
-        List<Sale> sales = new ArrayList<>();
-        String sql = "SELECT * FROM sales WHERE DATE(created_at) = ? ORDER BY id DESC";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, date.toString());
-            ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 sales.add(mapResultSetToSale(rs));
             }
@@ -125,10 +110,6 @@ public class SaleDAO {
         }
     }
 
-    public void markAsBilled(int saleId) throws SQLException {
-        markAsBilled(saleId, true);
-    }
-
     public void markAsBilled(int saleId, boolean isBilled) throws SQLException {
         String sql = "UPDATE sales SET is_billed = ?, last_modified_at = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -147,31 +128,6 @@ public class SaleDAO {
             pstmt.setInt(1, id);
             pstmt.executeUpdate();
         }
-    }
-
-    public double getTotalSalesAmount() throws SQLException {
-        String sql = "SELECT COALESCE(SUM(total_amount), 0) as total FROM sales";
-        try (Connection conn = DatabaseConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            if (rs.next()) {
-                return rs.getDouble("total");
-            }
-        }
-        return 0;
-    }
-
-    public double getTotalSalesByDate(LocalDate date) throws SQLException {
-        String sql = "SELECT COALESCE(SUM(total_amount), 0) as total FROM sales WHERE sale_date = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, date.toString());
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getDouble("total");
-            }
-        }
-        return 0;
     }
 
     public double getTotalCashByDateRange(LocalDate startDate, LocalDate endDate) throws SQLException {
@@ -197,19 +153,6 @@ public class SaleDAO {
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
                 return rs.getDouble("total");
-            }
-        }
-        return 0;
-    }
-
-    public int getTodaySalesCount() throws SQLException {
-        String sql = "SELECT COUNT(*) as count FROM sales WHERE sale_date = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, LocalDate.now().toString());
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getInt("count");
             }
         }
         return 0;

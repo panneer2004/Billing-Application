@@ -4,7 +4,6 @@ import com.chickencenter.database.DatabaseConnection;
 import com.chickencenter.model.SaleItem;
 
 import java.sql.*;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,20 +55,6 @@ public class SaleItemDAO {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, itemId);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getDouble(1);
-            }
-        }
-        return 0;
-    }
-
-    public double getTotalSoldQuantityByDateRange(LocalDate startDate, LocalDate endDate) throws SQLException {
-        String sql = "SELECT COALESCE(SUM(si.quantity), 0) FROM sale_items si JOIN sales s ON si.sale_id = s.id WHERE DATE(s.created_at) BETWEEN ? AND ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, startDate.toString());
-            pstmt.setString(2, endDate.toString());
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
                 return rs.getDouble(1);

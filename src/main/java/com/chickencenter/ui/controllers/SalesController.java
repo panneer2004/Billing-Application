@@ -244,15 +244,6 @@ public class SalesController {
         }
     }
 
-    private void loadAllSales() {
-        try {
-            List<Sale> sales = billingService.getAllSales();
-            salesList.clear();
-            salesList.addAll(sales);
-        } catch (SQLException e) {
-            showError("Error loading sales: " + e.getMessage());
-        }
-    }
 
     @FXML
     private void filterSales() {

@@ -11,8 +11,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.*;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.util.Duration;
@@ -23,21 +24,33 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DashboardController {
 
-    @FXML private ScrollPane scrollPane;
-    @FXML private VBox mainContainer;
-    @FXML private VBox donutSection;
-    @FXML private Label donutTitle;
-    @FXML private Label donutSubtitle;
-    @FXML private StackPane donutContainer;
-    @FXML private VBox donutLegend;
-    @FXML private VBox lineSection;
-    @FXML private Label lineTitle;
-    @FXML private Label lineSubtitle;
-    @FXML private StackPane lineContainer;
+    @FXML
+    private ScrollPane scrollPane;
+    @FXML
+    private VBox mainContainer;
+    @FXML
+    private VBox donutSection;
+    @FXML
+    private Label donutTitle;
+    @FXML
+    private Label donutSubtitle;
+    @FXML
+    private StackPane donutContainer;
+    @FXML
+    private VBox donutLegend;
+    @FXML
+    private VBox lineSection;
+    @FXML
+    private Label lineTitle;
+    @FXML
+    private Label lineSubtitle;
+    @FXML
+    private StackPane lineContainer;
 
     private static final Color[] CHART_COLORS = {
             Color.valueOf("#3B82F6"), // Primary Blue
@@ -87,11 +100,13 @@ public class DashboardController {
             s.setTranslateY(20);
 
             FadeTransition fade = new FadeTransition(Duration.millis(400), s);
-            fade.setFromValue(0); fade.setToValue(1);
+            fade.setFromValue(0);
+            fade.setToValue(1);
             fade.setInterpolator(Interpolator.EASE_OUT);
 
             TranslateTransition slide = new TranslateTransition(Duration.millis(400), s);
-            slide.setFromY(20); slide.setToY(0);
+            slide.setFromY(20);
+            slide.setToY(0);
             slide.setInterpolator(Interpolator.EASE_OUT);
 
             ParallelTransition pt = new ParallelTransition(fade, slide);
@@ -125,8 +140,8 @@ public class DashboardController {
     private List<DonutSegment> getDonutData() throws SQLException {
         List<DonutSegment> list = new ArrayList<>();
         String sql = "SELECT p.product_name, COALESCE(SUM(si.quantity),0) as qty " +
-                     "FROM products p LEFT JOIN sale_items si ON p.id = si.item_id " +
-                     "WHERE p.is_active = 1 GROUP BY p.id, p.product_name HAVING qty > 0 ORDER BY qty DESC LIMIT 8";
+                "FROM products p LEFT JOIN sale_items si ON p.id = si.item_id " +
+                "WHERE p.is_active = 1 GROUP BY p.id, p.product_name HAVING qty > 0 ORDER BY qty DESC LIMIT 8";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -207,10 +222,13 @@ public class DashboardController {
             DonutSegment seg = data.get(i);
             double pct = total > 0 ? (seg.qty / total) * 100 : 0;
             double sweep = total > 0 ? (seg.qty / total) * 360 : 0;
-            if (sweep < 0.5) { startAngle += sweep; continue; }
+            if (sweep < 0.5) {
+                startAngle += sweep;
+                continue;
+            }
 
             Color c = CHART_COLORS[i % CHART_COLORS.length];
-            final int fr = (int)(c.getRed() * 255), fg = (int)(c.getGreen() * 255), fb = (int)(c.getBlue() * 255);
+            final int fr = (int) (c.getRed() * 255), fg = (int) (c.getGreen() * 255), fb = (int) (c.getBlue() * 255);
             final double fStartAngle = startAngle;
             final double fSweep = sweep;
             final double fPct = pct;
@@ -244,11 +262,9 @@ public class DashboardController {
                 tooltipBox.getChildren().clear();
                 Label nameLbl = new Label(seg.name);
                 nameLbl.setStyle("-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: white; -fx-font-family: 'Segoe UI';");
-                Label qtyLbl = new Label(String.format("%.0f Units", seg.qty));
-                qtyLbl.setStyle("-fx-font-size: 11; -fx-text-fill: #94a3b8; -fx-font-family: 'Segoe UI';");
                 Label pctLbl = new Label(String.format("%.1f%%", fPct));
                 pctLbl.setStyle("-fx-font-size: 11; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-family: 'Segoe UI';");
-                tooltipBox.getChildren().addAll(nameLbl, qtyLbl, pctLbl);
+                tooltipBox.getChildren().addAll(nameLbl, pctLbl);
                 tooltipBox.setVisible(true);
                 positionTooltip(e.getScreenX(), e.getScreenY(), chartPane);
             });
@@ -306,11 +322,11 @@ public class DashboardController {
             row.setSpacing(8);
             row.setMaxWidth(HBox.USE_PREF_SIZE);
 
-            Circle dot = new Circle(5, Color.rgb((int)(c.getRed() * 255), (int)(c.getGreen() * 255), (int)(c.getBlue() * 255)));
+            Circle dot = new Circle(5, Color.rgb((int) (c.getRed() * 255), (int) (c.getGreen() * 255), (int) (c.getBlue() * 255)));
             Label name = new Label(truncate(seg.name, 16));
             name.setStyle("-fx-font-size: 11; -fx-text-fill: #475569; -fx-font-family: 'Segoe UI';");
             Label pctLabel = new Label(String.format("%.1f%%", pct));
-            pctLabel.setStyle("-fx-font-size: 11; -fx-font-weight: bold; -fx-text-fill: " + String.format("#%02x%02x%02x", (int)(c.getRed() * 255), (int)(c.getGreen() * 255), (int)(c.getBlue() * 255)) + "; -fx-font-family: 'Segoe UI';");
+            pctLabel.setStyle("-fx-font-size: 11; -fx-font-weight: bold; -fx-text-fill: " + String.format("#%02x%02x%02x", (int) (c.getRed() * 255), (int) (c.getGreen() * 255), (int) (c.getBlue() * 255)) + "; -fx-font-family: 'Segoe UI';");
 
             row.getChildren().addAll(dot, name, pctLabel);
             donutLegend.getChildren().add(row);
@@ -413,9 +429,9 @@ public class DashboardController {
             areaPath.getElements().add(new LineTo(points.get(0).x, points.get(0).y));
             for (int i = 1; i < points.size(); i++) {
                 linePath.getElements().add(new CubicCurveTo(
-                    points.get(i-1).x + stepX/3, points.get(i-1).y,
-                    points.get(i).x - stepX/3, points.get(i).y,
-                    points.get(i).x, points.get(i).y));
+                        points.get(i - 1).x + stepX / 3, points.get(i - 1).y,
+                        points.get(i).x - stepX / 3, points.get(i).y,
+                        points.get(i).x, points.get(i).y));
                 areaPath.getElements().add(new LineTo(points.get(i).x, points.get(i).y));
             }
             areaPath.getElements().add(new LineTo(points.get(points.size() - 1).x, padT + plotH));
@@ -427,7 +443,9 @@ public class DashboardController {
             dot.setOpacity(0);
             chart.getChildren().add(dot);
             FadeTransition df = new FadeTransition(Duration.millis(400), dot);
-            df.setToValue(1); df.setDelay(Duration.millis(300)); df.play();
+            df.setToValue(1);
+            df.setDelay(Duration.millis(300));
+            df.play();
         }
 
         chart.getChildren().add(areaPath);
@@ -449,10 +467,15 @@ public class DashboardController {
             final int idx = i;
             Platform.runLater(() -> {
                 FadeTransition df = new FadeTransition(Duration.millis(300), dot);
-                df.setToValue(1); df.setDelay(Duration.millis(200 + idx * 80)); df.play();
+                df.setToValue(1);
+                df.setDelay(Duration.millis(200 + idx * 80));
+                df.play();
 
                 ScaleTransition ds = new ScaleTransition(Duration.millis(300), dot);
-                ds.setToX(1); ds.setToY(1); ds.setDelay(Duration.millis(200 + idx * 80)); ds.play();
+                ds.setToX(1);
+                ds.setToY(1);
+                ds.setDelay(Duration.millis(200 + idx * 80));
+                ds.play();
             });
 
             VBox pointTooltip = new VBox();
@@ -516,7 +539,9 @@ public class DashboardController {
                 chart.getChildren().add(sv);
 
                 FadeTransition svf = new FadeTransition(Duration.millis(250), sv);
-                svf.setToValue(1); svf.setDelay(Duration.millis(400 + i * 80)); svf.play();
+                svf.setToValue(1);
+                svf.setDelay(Duration.millis(400 + i * 80));
+                svf.play();
             }
         }
 
@@ -535,17 +560,31 @@ public class DashboardController {
     /* ===== DATA MODELS ===== */
 
     static class DonutSegment {
-        String name; double qty;
-        DonutSegment(String n, double q) { name = n; qty = q; }
+        String name;
+        double qty;
+
+        DonutSegment(String n, double q) {
+            name = n;
+            qty = q;
+        }
     }
 
     static class DailyData {
-        LocalDate date; double sales;
-        DailyData(LocalDate d, double s) { date = d; sales = s; }
+        LocalDate date;
+        double sales;
+
+        DailyData(LocalDate d, double s) {
+            date = d;
+            sales = s;
+        }
     }
 
     static class Point {
         double x, y;
-        Point(double x, double y) { this.x = x; this.y = y; }
+
+        Point(double x, double y) {
+            this.x = x;
+            this.y = y;
+        }
     }
 }

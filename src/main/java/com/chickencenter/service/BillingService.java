@@ -5,7 +5,6 @@ import com.chickencenter.dao.PurchaseDAO;
 import com.chickencenter.dao.ProductDAO;
 import com.chickencenter.dao.SaleDAO;
 import com.chickencenter.dao.SaleItemDAO;
-import com.chickencenter.dao.StockDAO;
 import com.chickencenter.model.Price;
 import com.chickencenter.model.Product;
 import com.chickencenter.model.Sale;
@@ -19,7 +18,6 @@ public class BillingService {
     private final SaleDAO saleDAO;
     private final SaleItemDAO saleItemDAO;
     private final PriceDAO priceDAO;
-    private final StockDAO stockDAO;
     private final ProductDAO productDAO;
     private final PurchaseDAO purchaseDAO;
 
@@ -27,7 +25,6 @@ public class BillingService {
         this.saleDAO = new SaleDAO();
         this.saleItemDAO = new SaleItemDAO();
         this.priceDAO = new PriceDAO();
-        this.stockDAO = new StockDAO();
         this.productDAO = new ProductDAO();
         this.purchaseDAO = new PurchaseDAO();
     }
@@ -56,7 +53,8 @@ public class BillingService {
         if (saleItem != null) {
             Product product = productDAO.findById(saleItem.getItemId());
             if (product != null && "STOCK".equalsIgnoreCase(product.getProductSource())) {
-                stockDAO.addQuantity(saleItem.getItemId(), saleItem.getQuantity());
+                product.setStock(product.getStock() + saleItem.getQuantity());
+                productDAO.update(product);
             }
             saleItemDAO.delete(saleItemId);
             recalculateSaleTotal(saleItem.getSaleId());
@@ -77,7 +75,8 @@ public class BillingService {
         for (SaleItem item : items) {
             Product product = productDAO.findById(item.getItemId());
             if (product != null && "STOCK".equalsIgnoreCase(product.getProductSource())) {
-                stockDAO.reduceQuantity(item.getItemId(), item.getQuantity());
+                product.setStock(Math.max(0, product.getStock() - item.getQuantity()));
+                productDAO.update(product);
             }
         }
     }
@@ -87,7 +86,8 @@ public class BillingService {
         for (SaleItem item : items) {
             Product product = productDAO.findById(item.getItemId());
             if (product != null && "STOCK".equalsIgnoreCase(product.getProductSource())) {
-                stockDAO.addQuantity(item.getItemId(), item.getQuantity());
+                product.setStock(product.getStock() + item.getQuantity());
+                productDAO.update(product);
             }
         }
         saleItemDAO.deleteBySaleId(saleId);
@@ -126,8 +126,7 @@ public class BillingService {
 
         String source = product.getProductSource();
         if (source != null && source.equalsIgnoreCase("STOCK")) {
-            var stock = stockDAO.findByItemId(itemId);
-            return stock != null ? stock.getQuantity() : 0;
+            return product.getStock();
         }
 
         double totalPurchased = purchaseDAO.getTotalAvailableStock(itemId);

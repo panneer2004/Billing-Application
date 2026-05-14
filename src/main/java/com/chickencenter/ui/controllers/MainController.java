@@ -20,7 +20,6 @@ public class MainController {
     @FXML private Button btnBilling;
     @FXML private Button btnSales;
     @FXML private Button btnProducts;
-    @FXML private Button btnStock;
     @FXML private Button btnPurchase;
     @FXML private Button btnVendors;
     @FXML private Button btnEmployees;
@@ -51,7 +50,6 @@ public class MainController {
                     case "billing": showBilling(); break;
                     case "products": showProducts(); break;
                     case "sales": showSales(); break;
-                    case "stock": showStock(); break;
                     case "purchase": showPurchase(); break;
                     case "vendors": showVendors(); break;
                     case "employees": showEmployees(); break;
@@ -75,7 +73,6 @@ public class MainController {
         btnBilling.setStyle(normalBtnStyle);
         btnSales.setStyle(normalBtnStyle);
         btnProducts.setStyle(normalBtnStyle);
-        btnStock.setStyle(normalBtnStyle);
         btnPurchase.setStyle(normalBtnStyle);
         btnVendors.setStyle(normalBtnStyle);
         btnEmployees.setStyle(normalBtnStyle);
@@ -156,12 +153,6 @@ public class MainController {
     @FXML
     private void showProducts() {
         loadView("/com/chickencenter/ui/views/products-view.fxml", btnProducts);
-    }
-
-    @FXML
-    private void showStock() {
-        if (!securityService.checkSecurityAccess("stock")) return;
-        loadView("/com/chickencenter/ui/views/stock-view.fxml", btnStock);
     }
 
     @FXML

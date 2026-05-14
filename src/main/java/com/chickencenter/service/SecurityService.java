@@ -10,7 +10,7 @@ import java.util.Set;
 public class SecurityService {
 
     private static final Set<String> PROTECTED_MODULES = new HashSet<>(
-        Arrays.asList("stock", "purchase", "expenses", "employees", "vendors")
+        Arrays.asList("purchase", "expenses", "employees", "vendors")
     );
 
     private final AccountService accountService;

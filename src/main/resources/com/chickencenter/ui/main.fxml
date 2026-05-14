@@ -72,15 +72,6 @@
 
                     <Label text="MANAGEMENT" styleClass="menu-section-label"/>
 
-                    <Button fx:id="btnStock" onAction="#showStock" prefHeight="50" styleClass="nav-item">
-                        <graphic>
-                            <HBox spacing="14" alignment="CENTER_LEFT">
-                                <Text text="🏭" styleClass="nav-icon"/>
-                                <Text text="Stock" styleClass="nav-text"/>
-                            </HBox>
-                        </graphic>
-                    </Button>
-
                     <Button fx:id="btnPurchase" onAction="#showPurchase" prefHeight="50" styleClass="nav-item">
                         <graphic>
                             <HBox spacing="14" alignment="CENTER_LEFT">

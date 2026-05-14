@@ -56,17 +56,6 @@ public class ProductService {
             }
         }
         
-        // Check if product is in stock
-        checkSql = "SELECT COUNT(*) FROM stock WHERE item_id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(checkSql)) {
-            pstmt.setInt(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next() && rs.getInt(1) > 0) {
-                throw new SQLException("Cannot delete product because stock records exist");
-            }
-        }
-        
         // Check if product is in purchases
         checkSql = "SELECT COUNT(*) FROM purchases WHERE item_id = ?";
         try (Connection conn = DatabaseConnection.getConnection();

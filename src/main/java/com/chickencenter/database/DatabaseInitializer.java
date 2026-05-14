@@ -142,17 +142,6 @@ public class DatabaseInitializer {
                 )
             """);
 
-            stmt.execute("""
-                CREATE TABLE IF NOT EXISTS stock (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    item_id INTEGER NOT NULL UNIQUE,
-                    quantity REAL DEFAULT 0,
-                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                    last_modified_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (item_id) REFERENCES items(id)
-                )
-            """);
-
             stmt.execute("CREATE INDEX IF NOT EXISTS idx_items_vendor ON items(vendor_id)");
             stmt.execute("CREATE INDEX IF NOT EXISTS idx_purchase_batches_item ON purchase_batches(item_id)");
             stmt.execute("CREATE INDEX IF NOT EXISTS idx_price_list_item ON price_list(item_id)");

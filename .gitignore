@@ -22,3 +22,18 @@ Thumbs.db
 
 # Launch4j
 launch4j.log
+
+#For Updated .exe
+$env:JAVA_HOME="C:\Program Files\Java\jdk-26.0.1"
+
+$env:Path += ";$env:JAVA_HOME\bin"
+
+cd "C:\Users\acer\OneDrive\Desktop\Jk-Chicken-Center"
+
+jpackage `
+--input "C:\Users\acer\OneDrive\Desktop\Jk-Chicken-Center\out\artifacts\jk_chicken_center_jar" `
+--name "JK-Chicken-Center" `
+--main-jar "jk-chicken-center.jar" `
+--main-class "com.chickencenter.MainApp" `
+--type app-image `
+--runtime-image runtime

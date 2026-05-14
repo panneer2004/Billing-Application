@@ -10,6 +10,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -53,6 +54,12 @@ public class ProductsController {
     @FXML
     private ComboBox<Vendor> cmbVendor;
     @FXML
+    private CheckBox chkSubProduct;
+    @FXML
+    private ComboBox<Product> cmbParentProduct;
+    @FXML
+    private VBox parentProductContainer;
+    @FXML
     private Button btnSave;
     @FXML
     private Button btnClear;
@@ -73,8 +80,44 @@ public class ProductsController {
         setupTable();
         loadVendors();
         loadProducts();
+        loadParentProducts();
         setupAlphabetField(txtProductName);
         setupNumericField(txtPrice);
+        chkSubProduct.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            parentProductContainer.setVisible(newVal);
+            parentProductContainer.setManaged(newVal);
+            if (!newVal) {
+                cmbParentProduct.setValue(null);
+            }
+        });
+        cmbParentProduct.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                try {
+                    Product parent = productService.getProduct(newVal.getId());
+                    if (parent != null) {
+                        for (Vendor v : vendorList) {
+                            if (v.getId() == parent.getVendorId()) {
+                                cmbVendor.setValue(v);
+                                cmbVendor.setDisable(true);
+                                break;
+                            }
+                        }
+                    }
+                } catch (SQLException e) {
+                    showError("Error loading parent vendor: " + e.getMessage());
+                }
+            } else {
+                cmbVendor.setValue(null);
+                cmbVendor.setDisable(false);
+            }
+        });
+        cmbParentProduct.setButtonCell(new ListCell<Product>() {
+            protected void updateItem(Product item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "Select Parent Product" : item.getProductName());
+            }
+        });
+        cmbParentProduct.setPromptText("Select Parent Product");
         cmbUnit.getItems().addAll("KG", "Piece");
         cmbUnit.setButtonCell(new ListCell<String>() {
             protected void updateItem(String item, boolean empty) {
@@ -124,7 +167,24 @@ public class ProductsController {
     private void setupTable() {
         tblProducts.setSelectionModel(null);
         tblProducts.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        colProductName.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getProductName()));
+        colProductName.setCellFactory(col -> new TableCell<Product, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setText(null);
+                } else {
+                    Product p = getTableRow().getItem();
+                    if (p.getParentProductId() != null) {
+                        setText("    " + getProductDisplayName(p));
+                        setStyle("-fx-padding: 4 4 4 20;");
+                    } else {
+                        setText(p.getProductName());
+                        setStyle("-fx-padding: 4 4 4 8; -fx-font-weight: bold;");
+                    }
+                }
+            }
+        });
         colVendor.setCellValueFactory(cellData -> {
             try {
                 int vendorId = cellData.getValue().getVendorId();
@@ -312,6 +372,20 @@ public class ProductsController {
         txtBulkThreshold.setText(bulkThreshold > 0 ? String.valueOf((int) bulkThreshold) : "");
         double bulkPrice = product.getBulkPrice();
         txtBulkPrice.setText(bulkPrice > 0 ? String.valueOf(bulkPrice) : "");
+        if (product.getParentProductId() != null) {
+            chkSubProduct.setSelected(true);
+            for (Product p : cmbParentProduct.getItems()) {
+                if (p.getId() == product.getParentProductId()) {
+                    cmbParentProduct.setValue(p);
+                    break;
+                }
+            }
+            cmbVendor.setDisable(true);
+        } else {
+            chkSubProduct.setSelected(false);
+            cmbParentProduct.setValue(null);
+            cmbVendor.setDisable(false);
+        }
         btnSave.setText("Update");
     }
 
@@ -340,6 +414,27 @@ public class ProductsController {
         }
     }
 
+    private void loadParentProducts() {
+        try {
+            ObservableList<Product> parents = FXCollections.observableArrayList();
+            parents.addAll(productService.getAllParentProducts());
+            cmbParentProduct.setItems(parents);
+        } catch (SQLException e) {
+            showError("Error loading parent products: " + e.getMessage());
+        }
+    }
+
+    private String getProductDisplayName(Product p) {
+        if (p.getParentProductId() != null) {
+            for (Product prod : productList) {
+                if (prod.getId() == p.getParentProductId()) {
+                    return p.getProductName() + " (" + prod.getProductName() + ")";
+                }
+            }
+        }
+        return p.getProductName();
+    }
+
     @FXML
     private void saveProduct() {
         btnSave.setDisable(true);
@@ -358,6 +453,17 @@ public class ProductsController {
         }
         if (vendor == null) {
             showError("Please select vendor");
+            btnSave.setDisable(false);
+            return;
+        }
+        if (chkSubProduct.isSelected() && cmbParentProduct.getValue() == null) {
+            showError("Please select parent product for sub product");
+            btnSave.setDisable(false);
+            return;
+        }
+        if (chkSubProduct.isSelected() && selectedProduct != null && cmbParentProduct.getValue() != null
+                && cmbParentProduct.getValue().getId() == selectedProduct.getId()) {
+            showError("Product cannot be its own parent");
             btnSave.setDisable(false);
             return;
         }
@@ -393,6 +499,7 @@ public class ProductsController {
                 selectedProduct.setPrice(price);
                 selectedProduct.setBulkThreshold(bulkThreshold);
                 selectedProduct.setBulkPrice(bulkPrice);
+                selectedProduct.setParentProductId(chkSubProduct.isSelected() ? cmbParentProduct.getValue().getId() : null);
                 productService.updateProduct(selectedProduct);
             } else {
                 List<Product> existingProducts = productService.getAllProducts();
@@ -407,6 +514,7 @@ public class ProductsController {
                 newProduct.setPrice(price);
                 newProduct.setBulkThreshold(bulkThreshold);
                 newProduct.setBulkPrice(bulkPrice);
+                newProduct.setParentProductId(chkSubProduct.isSelected() ? cmbParentProduct.getValue().getId() : null);
                 productService.createProduct(newProduct);
             }
             loadProducts();
@@ -481,6 +589,11 @@ public class ProductsController {
             cmbVendor.getEditor().clear();
         }
         cmbVendor.setPromptText("Choose Vendor");
+        cmbVendor.setDisable(false);
+        chkSubProduct.setSelected(false);
+        cmbParentProduct.setValue(null);
+        parentProductContainer.setVisible(false);
+        parentProductContainer.setManaged(false);
         selectedProduct = null;
         isEditMode = false;
         btnSave.setText("Save");
@@ -495,6 +608,15 @@ public class ProductsController {
     }
 
     private void deleteProduct(Product product) {
+        try {
+            if (productService.hasChildren(product.getId())) {
+                showError("Cannot delete parent product with existing sub products. Remove sub products first.");
+                return;
+            }
+        } catch (SQLException e) {
+            showError("Error checking sub products: " + e.getMessage());
+            return;
+        }
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Confirm Delete");
         confirm.setHeaderText("Delete Product: " + product.getProductName());

@@ -170,13 +170,15 @@ public class DatabaseInitializer {
                     product_name TEXT NOT NULL,
                     unit TEXT NOT NULL,
                     vendor_id INTEGER,
+                    parent_product_id INTEGER,
                     current_batch_id INTEGER DEFAULT 0,
                     stock REAL DEFAULT 0,
                     price REAL DEFAULT 0,
                     is_active INTEGER DEFAULT 1,
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                     last_modified_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (vendor_id) REFERENCES vendors(id)
+                    FOREIGN KEY (vendor_id) REFERENCES vendors(id),
+                    FOREIGN KEY (parent_product_id) REFERENCES products(id)
                 )
             """);
 
@@ -187,6 +189,7 @@ public class DatabaseInitializer {
             addColumnIfNotExists(stmt, "products", "product_source", "TEXT DEFAULT 'PURCHASE'");
             addColumnIfNotExists(stmt, "products", "bulk_threshold", "REAL DEFAULT 0");
             addColumnIfNotExists(stmt, "products", "bulk_price", "REAL DEFAULT 0");
+            addColumnIfNotExists(stmt, "products", "parent_product_id", "INTEGER");
 
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS purchases (

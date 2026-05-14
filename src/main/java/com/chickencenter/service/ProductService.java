@@ -214,4 +214,12 @@ public class ProductService {
     public List<Product> getAllBatches() throws SQLException {
         return productDAO.findAll();
     }
+
+    public List<Product> getAllParentProducts() throws SQLException {
+        return productDAO.findAllParents();
+    }
+
+    public boolean hasChildren(int parentId) throws SQLException {
+        return productDAO.hasChildren(parentId);
+    }
 }

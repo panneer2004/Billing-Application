@@ -105,7 +105,7 @@ public class BillingController {
                 if (empty || item == null) {
                     setText("Choose Product");
                 } else {
-                    setText(item.getProductName());
+                    setText(getProductDisplayName(item));
                 }
             }
         });
@@ -314,9 +314,20 @@ public class BillingController {
 
     private String getProductName(int productId) {
         for (Product p : productList) {
-            if (p.getId() == productId) return p.getProductName();
+            if (p.getId() == productId) return getProductDisplayName(p);
         }
         return "";
+    }
+
+    private String getProductDisplayName(Product p) {
+        if (p.getParentProductId() != null) {
+            for (Product prod : productList) {
+                if (prod.getId() == p.getParentProductId()) {
+                    return p.getProductName() + " (" + prod.getProductName() + ")";
+                }
+            }
+        }
+        return p.getProductName();
     }
 
     private void loadProducts() {
@@ -364,7 +375,7 @@ public class BillingController {
                 if (empty || item == null) {
                     setText("Choose Product");
                 } else {
-                    setText(item.getProductName());
+                    setText(getProductDisplayName(item));
                 }
             }
         });

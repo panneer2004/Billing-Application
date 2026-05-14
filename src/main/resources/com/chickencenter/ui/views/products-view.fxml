@@ -99,6 +99,21 @@
                         style="-fx-background-color: #64748b; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13; -fx-font-weight: bold; -fx-cursor: hand;"/>
             </VBox>
         </HBox>
+        <HBox spacing="20" style="-fx-padding: 15 0 0 0;">
+            <VBox spacing="5" alignment="CENTER_LEFT">
+                <CheckBox fx:id="chkSubProduct" text="This is a Sub Product"
+                          style="-fx-font-size: 12; -fx-text-fill: #0F172A;"/>
+            </VBox>
+            <VBox spacing="5" prefWidth="250" fx:id="parentProductContainer" visible="false" managed="false">
+                <Label text="Parent Product" textFill="#64748b">
+                    <font>
+                        <Font size="12" name="Segoe UI"/>
+                    </font>
+                </Label>
+                <ComboBox fx:id="cmbParentProduct" promptText="Select Parent Product" prefWidth="240"
+                          style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
+            </VBox>
+        </HBox>
     </VBox>
 
     <!-- Table Section -->

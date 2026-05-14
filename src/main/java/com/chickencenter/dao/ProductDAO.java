@@ -11,20 +11,25 @@ import java.util.List;
 public class ProductDAO {
 
     public int create(Product product) throws SQLException {
-        String sql = "INSERT INTO products (product_name, unit, vendor_id, current_batch_id, stock, price, product_source, bulk_threshold, bulk_price, created_at, last_modified_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO products (product_name, unit, vendor_id, parent_product_id, current_batch_id, stock, price, product_source, bulk_threshold, bulk_price, created_at, last_modified_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, product.getProductName());
             pstmt.setString(2, product.getUnit());
             pstmt.setInt(3, product.getVendorId());
-            pstmt.setInt(4, product.getCurrentBatchId());
-            pstmt.setDouble(5, product.getStock());
-            pstmt.setDouble(6, product.getPrice());
-            pstmt.setString(7, product.getProductSource() != null ? product.getProductSource() : "PURCHASE");
-            pstmt.setDouble(8, product.getBulkThreshold());
-            pstmt.setDouble(9, product.getBulkPrice());
-            pstmt.setString(10, product.getCreatedAt().toString());
-            pstmt.setString(11, LocalDateTime.now().toString());
+            if (product.getParentProductId() != null) {
+                pstmt.setInt(4, product.getParentProductId());
+            } else {
+                pstmt.setNull(4, java.sql.Types.INTEGER);
+            }
+            pstmt.setInt(5, product.getCurrentBatchId());
+            pstmt.setDouble(6, product.getStock());
+            pstmt.setDouble(7, product.getPrice());
+            pstmt.setString(8, product.getProductSource() != null ? product.getProductSource() : "PURCHASE");
+            pstmt.setDouble(9, product.getBulkThreshold());
+            pstmt.setDouble(10, product.getBulkPrice());
+            pstmt.setString(11, product.getCreatedAt().toString());
+            pstmt.setString(12, LocalDateTime.now().toString());
             pstmt.executeUpdate();
             ResultSet rs = pstmt.getGeneratedKeys();
             if (rs.next()) {
@@ -49,7 +54,7 @@ public class ProductDAO {
 
     public List<Product> findAll() throws SQLException {
         List<Product> products = new ArrayList<>();
-        String sql = "SELECT * FROM products WHERE COALESCE(is_active, 1) = 1 ORDER BY product_name";
+        String sql = "SELECT * FROM products WHERE COALESCE(is_active, 1) = 1 ORDER BY parent_product_id IS NOT NULL, product_name";
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -58,6 +63,29 @@ public class ProductDAO {
             }
         }
         return products;
+    }
+
+    public List<Product> findAllParents() throws SQLException {
+        List<Product> products = new ArrayList<>();
+        String sql = "SELECT * FROM products WHERE COALESCE(is_active, 1) = 1 AND parent_product_id IS NULL ORDER BY product_name";
+        try (Connection conn = DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                products.add(mapResultSetToProduct(rs));
+            }
+        }
+        return products;
+    }
+
+    public boolean hasChildren(int parentId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM products WHERE parent_product_id = ? AND COALESCE(is_active, 1) = 1";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, parentId);
+            ResultSet rs = pstmt.executeQuery();
+            return rs.next() && rs.getInt(1) > 0;
+        }
     }
 
     public List<Product> findByVendorId(int vendorId) throws SQLException {
@@ -75,20 +103,25 @@ public class ProductDAO {
     }
 
     public void update(Product product) throws SQLException {
-        String sql = "UPDATE products SET product_name = ?, unit = ?, vendor_id = ?, current_batch_id = ?, stock = ?, price = ?, product_source = ?, bulk_threshold = ?, bulk_price = ?, last_modified_at = ? WHERE id = ?";
+        String sql = "UPDATE products SET product_name = ?, unit = ?, vendor_id = ?, parent_product_id = ?, current_batch_id = ?, stock = ?, price = ?, product_source = ?, bulk_threshold = ?, bulk_price = ?, last_modified_at = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, product.getProductName());
             pstmt.setString(2, product.getUnit());
             pstmt.setInt(3, product.getVendorId());
-            pstmt.setInt(4, product.getCurrentBatchId());
-            pstmt.setDouble(5, product.getStock());
-            pstmt.setDouble(6, product.getPrice());
-            pstmt.setString(7, product.getProductSource() != null ? product.getProductSource() : "PURCHASE");
-            pstmt.setDouble(8, product.getBulkThreshold());
-            pstmt.setDouble(9, product.getBulkPrice());
-            pstmt.setString(10, LocalDateTime.now().toString());
-            pstmt.setInt(11, product.getId());
+            if (product.getParentProductId() != null) {
+                pstmt.setInt(4, product.getParentProductId());
+            } else {
+                pstmt.setNull(4, java.sql.Types.INTEGER);
+            }
+            pstmt.setInt(5, product.getCurrentBatchId());
+            pstmt.setDouble(6, product.getStock());
+            pstmt.setDouble(7, product.getPrice());
+            pstmt.setString(8, product.getProductSource() != null ? product.getProductSource() : "PURCHASE");
+            pstmt.setDouble(9, product.getBulkThreshold());
+            pstmt.setDouble(10, product.getBulkPrice());
+            pstmt.setString(11, LocalDateTime.now().toString());
+            pstmt.setInt(12, product.getId());
             pstmt.executeUpdate();
         }
     }
@@ -169,6 +202,8 @@ public class ProductDAO {
         product.setUnit(rs.getString("unit"));
         product.setVendorId(rs.getInt("vendor_id"));
         product.setCurrentBatchId(rs.getInt("current_batch_id"));
+        int parentId = rs.getInt("parent_product_id");
+        if (!rs.wasNull()) product.setParentProductId(parentId);
         product.setStock(rs.getDouble("stock"));
         product.setPrice(rs.getDouble("price"));
         product.setBulkThreshold(rs.getDouble("bulk_threshold"));

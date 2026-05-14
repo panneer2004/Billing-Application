@@ -9,6 +9,7 @@ public class Product {
     private String unit;
     private int vendorId;
     private int currentBatchId;
+    private Integer parentProductId;
     private double stock;
     private double price;
     private double bulkPrice;
@@ -50,6 +51,8 @@ public class Product {
     public void setBulkPrice(double bulkPrice) { this.bulkPrice = bulkPrice; }
     public double getBulkThreshold() { return bulkThreshold; }
     public void setBulkThreshold(double bulkThreshold) { this.bulkThreshold = bulkThreshold; }
+    public Integer getParentProductId() { return parentProductId; }
+    public void setParentProductId(Integer parentProductId) { this.parentProductId = parentProductId; }
     public int getIsActive() { return isActive; }
     public void setIsActive(int isActive) { this.isActive = isActive; }
     public String getProductSource() { return productSource; }

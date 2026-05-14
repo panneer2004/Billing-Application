@@ -49,6 +49,13 @@ public class SalesController {
     @FXML private Label lblTotalCash;
     @FXML private Label lblTotalGPay;
     @FXML private FlowPane productSummaryContainer;
+    @FXML private VBox saleViewContainer;
+    @FXML private VBox itemViewContainer;
+    @FXML private Button btnSaleView;
+    @FXML private Button btnItemView;
+
+    private final String activeTabStyle = "-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 6; -fx-font-size: 12; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 6 16;";
+    private final String inactiveTabStyle = "-fx-background-color: #e2e8f0; -fx-text-fill: #64748b; -fx-background-radius: 6; -fx-font-size: 12; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 6 16;";
 
     private final BillingService billingService;
     private final ProductService productService;
@@ -75,6 +82,27 @@ public class SalesController {
         filterSales();
         dpFromDate.setOnAction(e -> filterSales());
         dpToDate.setOnAction(e -> filterSales());
+        showSaleView();
+    }
+
+    @FXML
+    private void showSaleView() {
+        saleViewContainer.setVisible(true);
+        saleViewContainer.setManaged(true);
+        itemViewContainer.setVisible(false);
+        itemViewContainer.setManaged(false);
+        btnSaleView.setStyle(activeTabStyle);
+        btnItemView.setStyle(inactiveTabStyle);
+    }
+
+    @FXML
+    private void showItemView() {
+        saleViewContainer.setVisible(false);
+        saleViewContainer.setManaged(false);
+        itemViewContainer.setVisible(true);
+        itemViewContainer.setManaged(true);
+        btnItemView.setStyle(activeTabStyle);
+        btnSaleView.setStyle(inactiveTabStyle);
     }
 
     public void refreshSales() {

@@ -19,7 +19,7 @@ public class PurchaseDAO {
             int nextBatchId = getNextBatchId(conn, purchase.getItemId());
             System.out.println("Next batch ID for item " + purchase.getItemId() + ": " + nextBatchId);
             
-            String sql = "INSERT INTO purchases (item_batch_id, item_id, vendor_id, batch_quantity, rate, total_amount, created_at, last_modified_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO purchases (item_batch_id, item_id, vendor_id, batch_quantity, balance_quantity, rate, total_amount, created_at, last_modified_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             System.out.println("SQL: " + sql);
             
             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -28,11 +28,12 @@ public class PurchaseDAO {
             pstmt.setInt(2, purchase.getItemId());
             pstmt.setInt(3, purchase.getVendorId());
             pstmt.setDouble(4, purchase.getBatchQuantity());
-            pstmt.setDouble(5, purchase.getRate());
-            pstmt.setDouble(6, purchase.getTotalAmount());
+            pstmt.setDouble(5, purchase.getBalanceQuantity());
+            pstmt.setDouble(6, purchase.getRate());
+            pstmt.setDouble(7, purchase.getTotalAmount());
             String now = LocalDateTime.now().toString();
-            pstmt.setString(7, now);
             pstmt.setString(8, now);
+            pstmt.setString(9, now);
             
             System.out.println("Executing update with params:");
             System.out.println("  item_batch_id: " + nextBatchId);
@@ -90,6 +91,7 @@ public class PurchaseDAO {
             SELECT p.id, p.product_name, p.unit, p.vendor_id, p.current_batch_id, v.name as vendor_name
             FROM products p
             LEFT JOIN vendors v ON p.vendor_id = v.id
+            WHERE p.parent_product_id IS NULL
             ORDER BY p.product_name
             """;
         try (Connection conn = DatabaseConnection.getConnection();
@@ -125,8 +127,8 @@ public class PurchaseDAO {
     public List<PurchaseWithDetails> findAllWithDetails() throws SQLException {
         List<PurchaseWithDetails> list = new ArrayList<>();
         String sql = """
-            SELECT pu.id, pu.item_batch_id, pu.item_id, pu.vendor_id, pu.batch_quantity, pu.rate, pu.total_amount,
-                   p.product_name, v.name as vendor_name
+            SELECT pu.id, pu.item_batch_id, pu.item_id, pu.vendor_id, pu.batch_quantity, pu.balance_quantity,
+                   pu.rate, pu.total_amount, p.product_name, v.name as vendor_name
             FROM purchases pu
             LEFT JOIN products p ON pu.item_id = p.id
             LEFT JOIN vendors v ON pu.vendor_id = v.id
@@ -142,6 +144,7 @@ public class PurchaseDAO {
                 p.setItemId(rs.getInt("item_id"));
                 p.setVendorId(rs.getInt("vendor_id"));
                 p.setBatchQuantity(rs.getDouble("batch_quantity"));
+                p.setBalanceQuantity(rs.getDouble("balance_quantity"));
                 p.setRate(rs.getDouble("rate"));
                 p.setTotalAmount(rs.getDouble("total_amount"));
                 p.setProductName(rs.getString("product_name"));
@@ -155,8 +158,8 @@ public class PurchaseDAO {
     public List<PurchaseWithDetails> findAllWithDetailsByDateRange(LocalDate startDate, LocalDate endDate) throws SQLException {
         List<PurchaseWithDetails> list = new ArrayList<>();
         String sql = """
-            SELECT pu.id, pu.item_batch_id, pu.item_id, pu.vendor_id, pu.batch_quantity, pu.rate, pu.total_amount,
-                   p.product_name, v.name as vendor_name, pu.created_at
+            SELECT pu.id, pu.item_batch_id, pu.item_id, pu.vendor_id, pu.batch_quantity, pu.balance_quantity,
+                   pu.rate, pu.total_amount, p.product_name, v.name as vendor_name, pu.created_at
             FROM purchases pu
             LEFT JOIN products p ON pu.item_id = p.id
             LEFT JOIN vendors v ON pu.vendor_id = v.id
@@ -175,6 +178,7 @@ public class PurchaseDAO {
                 p.setItemId(rs.getInt("item_id"));
                 p.setVendorId(rs.getInt("vendor_id"));
                 p.setBatchQuantity(rs.getDouble("batch_quantity"));
+                p.setBalanceQuantity(rs.getDouble("balance_quantity"));
                 p.setRate(rs.getDouble("rate"));
                 p.setTotalAmount(rs.getDouble("total_amount"));
                 p.setProductName(rs.getString("product_name"));
@@ -186,14 +190,19 @@ public class PurchaseDAO {
     }
 
     public void update(Purchase purchase) throws SQLException {
-        String sql = "UPDATE purchases SET batch_quantity = ?, rate = ?, total_amount = ?, last_modified_at = ? WHERE id = ?";
+        Purchase existing = findById(purchase.getId());
+        if (existing == null) return;
+        double delta = purchase.getBatchQuantity() - existing.getBatchQuantity();
+        double newBalance = Math.max(0, existing.getBalanceQuantity() + delta);
+        String sql = "UPDATE purchases SET batch_quantity = ?, balance_quantity = ?, rate = ?, total_amount = ?, last_modified_at = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setDouble(1, purchase.getBatchQuantity());
-            pstmt.setDouble(2, purchase.getRate());
-            pstmt.setDouble(3, purchase.getTotalAmount());
-            pstmt.setString(4, LocalDateTime.now().toString());
-            pstmt.setInt(5, purchase.getId());
+            pstmt.setDouble(2, newBalance);
+            pstmt.setDouble(3, purchase.getRate());
+            pstmt.setDouble(4, purchase.getTotalAmount());
+            pstmt.setString(5, LocalDateTime.now().toString());
+            pstmt.setInt(6, purchase.getId());
             pstmt.executeUpdate();
         }
     }
@@ -244,6 +253,33 @@ public class PurchaseDAO {
         return 0;
     }
     
+    public double getTotalPurchasedQuantity(int itemId) throws SQLException {
+        String sql = "SELECT COALESCE(SUM(batch_quantity), 0) FROM purchases WHERE item_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, itemId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getDouble(1);
+            }
+        }
+        return 0;
+    }
+
+    public double getBatchTotalPurchased(int itemId, int batchId) throws SQLException {
+        String sql = "SELECT COALESCE(SUM(batch_quantity), 0) FROM purchases WHERE item_id = ? AND item_batch_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, itemId);
+            pstmt.setInt(2, batchId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getDouble(1);
+            }
+        }
+        return 0;
+    }
+
     public double getTotalAvailableStock(int itemId) throws SQLException {
         String sql = """
             SELECT COALESCE(SUM(p.batch_quantity), 0) - COALESCE((
@@ -279,6 +315,85 @@ public class PurchaseDAO {
         return purchases;
     }
 
+    public Purchase findById(int id) throws SQLException {
+        String sql = "SELECT * FROM purchases WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToPurchase(rs);
+            }
+        }
+        return null;
+    }
+
+    public Purchase findByItemIdAndBatchId(int itemId, int batchId) throws SQLException {
+        String sql = "SELECT * FROM purchases WHERE item_id = ? AND item_batch_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, itemId);
+            pstmt.setInt(2, batchId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToPurchase(rs);
+            }
+        }
+        return null;
+    }
+
+    public void addBalanceQuantity(int itemId, int batchId, double quantity) throws SQLException {
+        String sql = "UPDATE purchases SET balance_quantity = balance_quantity + ?, last_modified_at = ? WHERE item_id = ? AND item_batch_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setDouble(1, quantity);
+            pstmt.setString(2, LocalDateTime.now().toString());
+            pstmt.setInt(3, itemId);
+            pstmt.setInt(4, batchId);
+            pstmt.executeUpdate();
+        }
+    }
+
+    public void reduceBalanceQuantity(int itemId, int batchId, double quantity) throws SQLException {
+        String sql = "UPDATE purchases SET balance_quantity = MAX(0, balance_quantity - ?), last_modified_at = ? WHERE item_id = ? AND item_batch_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setDouble(1, quantity);
+            pstmt.setString(2, LocalDateTime.now().toString());
+            pstmt.setInt(3, itemId);
+            pstmt.setInt(4, batchId);
+            pstmt.executeUpdate();
+        }
+    }
+
+    public double getBalanceQuantity(int itemId, int batchId) throws SQLException {
+        String sql = "SELECT COALESCE(balance_quantity, 0) FROM purchases WHERE item_id = ? AND item_batch_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, itemId);
+            pstmt.setInt(2, batchId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getDouble(1);
+            }
+        }
+        return 0;
+    }
+
+    public Integer getNextBatchWithPositiveBalance(int itemId, int currentBatchId) throws SQLException {
+        String sql = "SELECT item_batch_id FROM purchases WHERE item_id = ? AND item_batch_id > ? AND balance_quantity > 0 ORDER BY item_batch_id ASC LIMIT 1";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, itemId);
+            pstmt.setInt(2, currentBatchId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return null;
+    }
+
     private Purchase mapResultSetToPurchase(ResultSet rs) throws SQLException {
         Purchase p = new Purchase();
         p.setId(rs.getInt("id"));
@@ -286,6 +401,7 @@ public class PurchaseDAO {
         p.setItemId(rs.getInt("item_id"));
         p.setVendorId(rs.getInt("vendor_id"));
         p.setBatchQuantity(rs.getDouble("batch_quantity"));
+        p.setBalanceQuantity(rs.getDouble("balance_quantity"));
         p.setRate(rs.getDouble("rate"));
         p.setTotalAmount(rs.getDouble("total_amount"));
         p.setCreatedAt(rs.getString("created_at"));
@@ -326,6 +442,7 @@ public class PurchaseDAO {
         private int itemId;
         private int vendorId;
         private double batchQuantity;
+        private double balanceQuantity;
         private double rate;
         private double totalAmount;
         private String productName;
@@ -341,6 +458,8 @@ public class PurchaseDAO {
         public void setVendorId(int vendorId) { this.vendorId = vendorId; }
         public double getBatchQuantity() { return batchQuantity; }
         public void setBatchQuantity(double batchQuantity) { this.batchQuantity = batchQuantity; }
+        public double getBalanceQuantity() { return balanceQuantity; }
+        public void setBalanceQuantity(double balanceQuantity) { this.balanceQuantity = balanceQuantity; }
         public double getRate() { return rate; }
         public void setRate(double rate) { this.rate = rate; }
         public double getTotalAmount() { return totalAmount; }

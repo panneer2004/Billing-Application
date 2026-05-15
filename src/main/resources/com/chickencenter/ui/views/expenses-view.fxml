@@ -32,259 +32,262 @@
                 style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 11; -fx-font-weight: bold; -fx-cursor: hand;"/>
     </HBox>
 
-    <!-- Tabs -->
-    <TabPane fx:id="tabPane" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;" tabClosingPolicy="UNAVAILABLE">
-        
-        <!-- Vendor Expenses Tab -->
-        <Tab fx:id="tabVendorExpenses" text="Vendor Expenses">
-            <VBox spacing="15" style="-fx-padding: 15 0 0 0;">
-                <!-- Form -->
-                <VBox style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 20; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
-                    <HBox style="-fx-padding: 0 0 15 0;">
-                        <Label text="Add Vendor Expense" textFill="#0F172A">
-                            <font>
-                                <Font size="14" name="Segoe UI Bold"/>
-                            </font>
-                        </Label>
-                    </HBox>
+    <!-- Toggle Buttons -->
+    <HBox spacing="10" style="-fx-padding: 4 0 0 0;">
+        <Button fx:id="btnVendorView" text="Vendor Expenses" onAction="#showVendorView" prefWidth="130" prefHeight="34"
+                minWidth="130" maxWidth="130" minHeight="34" maxHeight="34"
+                style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 6; -fx-font-size: 12; -fx-font-weight: bold; -fx-cursor: hand;"/>
+        <Button fx:id="btnEmployeeView" text="Employee Expenses" onAction="#showEmployeeView" prefWidth="140" prefHeight="34"
+                minWidth="140" maxWidth="140" minHeight="34" maxHeight="34"
+                style="-fx-background-color: #e2e8f0; -fx-text-fill: #64748b; -fx-background-radius: 6; -fx-font-size: 12; -fx-font-weight: bold; -fx-cursor: hand;"/>
+        <Button fx:id="btnShopView" text="Shop Expenses" onAction="#showShopView" prefWidth="120" prefHeight="34"
+                minWidth="120" maxWidth="120" minHeight="34" maxHeight="34"
+                style="-fx-background-color: #e2e8f0; -fx-text-fill: #64748b; -fx-background-radius: 6; -fx-font-size: 12; -fx-font-weight: bold; -fx-cursor: hand;"/>
+    </HBox>
 
-                    <HBox spacing="20">
-                        <VBox spacing="5" prefWidth="200">
-                            <Label text="Vendor" textFill="#64748b">
-                                <font>
-                                    <Font size="12" name="Segoe UI"/>
-                                </font>
-                            </Label>
-                            <ComboBox fx:id="cmbExpenseVendor" promptText="Select Vendor" prefWidth="190"
-                                      style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
-                        </VBox>
+    <!-- Vendor Expenses Container -->
+    <VBox fx:id="vendorExpenseContainer" spacing="15" VBox.vgrow="ALWAYS">
+        <!-- Form -->
+        <VBox style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 20; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
+            <HBox style="-fx-padding: 0 0 15 0;">
+                <Label text="Add Vendor Expense" textFill="#0F172A">
+                    <font>
+                        <Font size="14" name="Segoe UI Bold"/>
+                    </font>
+                </Label>
+            </HBox>
 
-                        <VBox spacing="5" HBox.hgrow="ALWAYS">
-                            <Label text="Note" textFill="#64748b">
-                                <font>
-                                    <Font size="12" name="Segoe UI"/>
-                                </font>
-                            </Label>
-                            <TextField fx:id="txtVENote" promptText="Enter note"
-                                       style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
-                        </VBox>
-
-                        <VBox spacing="5" prefWidth="120">
-                            <Label text="Amount (Rs.)" textFill="#64748b">
-                                <font>
-                                    <Font size="12" name="Segoe UI"/>
-                                </font>
-                            </Label>
-                            <TextField fx:id="txtVEAmount" promptText="Enter amount"
-                                       style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
-                        </VBox>
-
-                        <VBox spacing="5" prefWidth="150">
-                            <Label text="Date" textFill="#64748b">
-                                <font>
-                                    <Font size="12" name="Segoe UI"/>
-                                </font>
-                            </Label>
-                            <DatePicker fx:id="dpVEDate" prefWidth="140" style="-fx-background-radius: 5;"/>
-                        </VBox>
-
-                        <VBox spacing="5" alignment="BOTTOM_LEFT">
-                            <Button fx:id="btnAddVendorExpense" text="Add" onAction="#addVendorExpense" prefWidth="100" prefHeight="38"
-                                    style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13; -fx-font-weight: bold; -fx-cursor: hand;"/>
-                        </VBox>
-
-                        <VBox spacing="5" alignment="BOTTOM_LEFT">
-                            <Button text="Clear" onAction="#clearVEFields" prefWidth="100" prefHeight="38"
-                                    style="-fx-background-color: #64748b; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13; -fx-font-weight: bold; -fx-cursor: hand;"/>
-                        </VBox>
-                    </HBox>
+            <HBox spacing="20">
+                <VBox spacing="5" prefWidth="200">
+                    <Label text="Vendor" textFill="#64748b">
+                        <font>
+                            <Font size="12" name="Segoe UI"/>
+                        </font>
+                    </Label>
+                    <ComboBox fx:id="cmbExpenseVendor" promptText="Select Vendor" prefWidth="190"
+                              style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
                 </VBox>
 
-                <!-- Table -->
-                <VBox VBox.vgrow="ALWAYS" style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 12; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
-                    <HBox style="-fx-padding: 0 0 10 0;">
-                        <Label text="Vendor Expenses" textFill="#0F172A">
-                            <font>
-                                <Font size="14" name="Segoe UI Bold"/>
-                            </font>
-                        </Label>
-                    </HBox>
-
-                    <TableView fx:id="tblVendorExpenses" VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 4; -fx-table-cell-border-color: #e2e8f0;">
-                        <columns>
-                            <TableColumn fx:id="colVEVendor" text="Vendor" prefWidth="150" style="-fx-alignment: CENTER;"/>
-                            <TableColumn fx:id="colVENote" text="Note" prefWidth="200" style="-fx-alignment: CENTER;"/>
-                            <TableColumn fx:id="colVEAmount" text="Amount" prefWidth="100" style="-fx-alignment: CENTER;"/>
-                            <TableColumn fx:id="colVEDate" text="Date" prefWidth="100" style="-fx-alignment: CENTER;"/>
-                        </columns>
-                    </TableView>
-                </VBox>
-            </VBox>
-        </Tab>
-
-        <!-- Employee Expenses Tab -->
-        <Tab fx:id="tabEmployeeExpenses" text="Employee Expenses">
-            <VBox spacing="15" style="-fx-padding: 15 0 0 0;">
-                <!-- Form -->
-                <VBox style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 20; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
-                    <HBox style="-fx-padding: 0 0 15 0;">
-                        <Label text="Add Employee Expense" textFill="#0F172A">
-                            <font>
-                                <Font size="14" name="Segoe UI Bold"/>
-                            </font>
-                        </Label>
-                    </HBox>
-
-                    <HBox spacing="20">
-                        <VBox spacing="5" prefWidth="200">
-                            <Label text="Employee" textFill="#64748b">
-                                <font>
-                                    <Font size="12" name="Segoe UI"/>
-                                </font>
-                            </Label>
-                            <ComboBox fx:id="cmbExpenseEmployee" promptText="Select Employee" prefWidth="190"
-                                      style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
-                        </VBox>
-
-                        <VBox spacing="5" HBox.hgrow="ALWAYS">
-                            <Label text="Note" textFill="#64748b">
-                                <font>
-                                    <Font size="12" name="Segoe UI"/>
-                                </font>
-                            </Label>
-                            <TextField fx:id="txtEENote" promptText="Enter note"
-                                       style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
-                        </VBox>
-
-                        <VBox spacing="5" prefWidth="120">
-                            <Label text="Amount (Rs.)" textFill="#64748b">
-                                <font>
-                                    <Font size="12" name="Segoe UI"/>
-                                </font>
-                            </Label>
-                            <TextField fx:id="txtEEAmount" promptText="Enter amount"
-                                       style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
-                        </VBox>
-
-                        <VBox spacing="5" prefWidth="150">
-                            <Label text="Date" textFill="#64748b">
-                                <font>
-                                    <Font size="12" name="Segoe UI"/>
-                                </font>
-                            </Label>
-                            <DatePicker fx:id="dpEEDate" prefWidth="140" style="-fx-background-radius: 5;"/>
-                        </VBox>
-
-                        <VBox spacing="5" alignment="BOTTOM_LEFT">
-                            <Button fx:id="btnAddEmployeeExpense" text="Add" onAction="#addEmployeeExpense" prefWidth="100" prefHeight="38"
-                                    style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13; -fx-font-weight: bold; -fx-cursor: hand;"/>
-                        </VBox>
-
-                        <VBox spacing="5" alignment="BOTTOM_LEFT">
-                            <Button text="Clear" onAction="#clearEEFields" prefWidth="100" prefHeight="38"
-                                    style="-fx-background-color: #64748b; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13; -fx-font-weight: bold; -fx-cursor: hand;"/>
-                        </VBox>
-                    </HBox>
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Note" textFill="#64748b">
+                        <font>
+                            <Font size="12" name="Segoe UI"/>
+                        </font>
+                    </Label>
+                    <TextField fx:id="txtVENote" promptText="Enter note"
+                               style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
                 </VBox>
 
-                <!-- Table -->
-                <VBox VBox.vgrow="ALWAYS" style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 12; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
-                    <HBox style="-fx-padding: 0 0 10 0;">
-                        <Label text="Employee Expenses" textFill="#0F172A">
-                            <font>
-                                <Font size="14" name="Segoe UI Bold"/>
-                            </font>
-                        </Label>
-                    </HBox>
-
-                    <TableView fx:id="tblEmployeeExpenses" VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 4; -fx-table-cell-border-color: #e2e8f0;">
-                        <columns>
-                            <TableColumn fx:id="colEEEmployee" text="Employee" prefWidth="150" style="-fx-alignment: CENTER;"/>
-                            <TableColumn fx:id="colEENote" text="Note" prefWidth="200" style="-fx-alignment: CENTER;"/>
-                            <TableColumn fx:id="colEEAmount" text="Amount" prefWidth="100" style="-fx-alignment: CENTER;"/>
-                            <TableColumn fx:id="colEEDate" text="Date" prefWidth="100" style="-fx-alignment: CENTER;"/>
-                        </columns>
-                    </TableView>
-                </VBox>
-            </VBox>
-        </Tab>
-
-        <!-- Shop Expenses Tab -->
-        <Tab fx:id="tabShopExpenses" text="Shop Expenses">
-            <VBox spacing="15" style="-fx-padding: 15 0 0 0;">
-                <!-- Form -->
-                <VBox style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 20; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
-                    <HBox style="-fx-padding: 0 0 15 0;">
-                        <Label text="Add Shop Expense" textFill="#0F172A">
-                            <font>
-                                <Font size="14" name="Segoe UI Bold"/>
-                            </font>
-                        </Label>
-                    </HBox>
-
-                    <HBox spacing="20">
-                        <VBox spacing="5" HBox.hgrow="ALWAYS">
-                            <Label text="Note" textFill="#64748b">
-                                <font>
-                                    <Font size="12" name="Segoe UI"/>
-                                </font>
-                            </Label>
-                            <TextField fx:id="txtSENote" promptText="Enter note"
-                                       style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
-                        </VBox>
-
-                        <VBox spacing="5" prefWidth="120">
-                            <Label text="Amount (Rs.)" textFill="#64748b">
-                                <font>
-                                    <Font size="12" name="Segoe UI"/>
-                                </font>
-                            </Label>
-                            <TextField fx:id="txtSEAmount" promptText="Enter amount"
-                                       style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
-                        </VBox>
-
-                        <VBox spacing="5" prefWidth="150">
-                            <Label text="Date" textFill="#64748b">
-                                <font>
-                                    <Font size="12" name="Segoe UI"/>
-                                </font>
-                            </Label>
-                            <DatePicker fx:id="dpSEDate" prefWidth="140" style="-fx-background-radius: 5;"/>
-                        </VBox>
-
-                        <VBox spacing="5" alignment="BOTTOM_LEFT">
-                            <Button fx:id="btnAddShopExpense" text="Add" onAction="#addShopExpense" prefWidth="100" prefHeight="38"
-                                    style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13; -fx-font-weight: bold; -fx-cursor: hand;"/>
-                        </VBox>
-
-                        <VBox spacing="5" alignment="BOTTOM_LEFT">
-                            <Button text="Clear" onAction="#clearSEFields" prefWidth="100" prefHeight="38"
-                                    style="-fx-background-color: #64748b; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13; -fx-font-weight: bold; -fx-cursor: hand;"/>
-                        </VBox>
-                    </HBox>
+                <VBox spacing="5" prefWidth="120">
+                    <Label text="Amount (Rs.)" textFill="#64748b">
+                        <font>
+                            <Font size="12" name="Segoe UI"/>
+                        </font>
+                    </Label>
+                    <TextField fx:id="txtVEAmount" promptText="Enter amount"
+                               style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
                 </VBox>
 
-                <!-- Table -->
-                <VBox VBox.vgrow="ALWAYS" style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 12; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
-                    <HBox style="-fx-padding: 0 0 10 0;">
-                        <Label text="Shop Expenses" textFill="#0F172A">
-                            <font>
-                                <Font size="14" name="Segoe UI Bold"/>
-                            </font>
-                        </Label>
-                    </HBox>
-
-                    <TableView fx:id="tblShopExpenses" VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 4; -fx-table-cell-border-color: #e2e8f0;">
-                        <columns>
-                            <TableColumn fx:id="colSENote" text="Note" prefWidth="250" style="-fx-alignment: CENTER;"/>
-                            <TableColumn fx:id="colSEAmount" text="Amount" prefWidth="100" style="-fx-alignment: CENTER;"/>
-                            <TableColumn fx:id="colSEDate" text="Date" prefWidth="100" style="-fx-alignment: CENTER;"/>
-                            <TableColumn fx:id="colSEAction" text="Action" prefWidth="120" minWidth="100" style="-fx-alignment: CENTER;"/>
-                        </columns>
-                    </TableView>
+                <VBox spacing="5" prefWidth="150">
+                    <Label text="Date" textFill="#64748b">
+                        <font>
+                            <Font size="12" name="Segoe UI"/>
+                        </font>
+                    </Label>
+                    <DatePicker fx:id="dpVEDate" prefWidth="140" style="-fx-background-radius: 5;"/>
                 </VBox>
-            </VBox>
-        </Tab>
-    </TabPane>
+
+                <VBox spacing="5" alignment="BOTTOM_LEFT">
+                    <Button fx:id="btnAddVendorExpense" text="Add" onAction="#addVendorExpense" prefWidth="100" prefHeight="38"
+                            style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13; -fx-font-weight: bold; -fx-cursor: hand;"/>
+                </VBox>
+
+                <VBox spacing="5" alignment="BOTTOM_LEFT">
+                    <Button text="Clear" onAction="#clearVEFields" prefWidth="100" prefHeight="38"
+                            style="-fx-background-color: #64748b; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13; -fx-font-weight: bold; -fx-cursor: hand;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+
+        <!-- Table -->
+        <VBox VBox.vgrow="ALWAYS" style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 12; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
+            <HBox style="-fx-padding: 0 0 10 0;">
+                <Label text="Vendor Expenses" textFill="#0F172A">
+                    <font>
+                        <Font size="14" name="Segoe UI Bold"/>
+                    </font>
+                </Label>
+            </HBox>
+
+            <TableView fx:id="tblVendorExpenses" VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 4; -fx-table-cell-border-color: #e2e8f0;">
+                <columns>
+                    <TableColumn fx:id="colVEVendor" text="Vendor" prefWidth="150" style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colVENote" text="Note" prefWidth="200" style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colVEAmount" text="Amount" prefWidth="100" style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colVEDate" text="Date" prefWidth="100" style="-fx-alignment: CENTER;"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </VBox>
+
+    <!-- Employee Expenses Container -->
+    <VBox fx:id="employeeExpenseContainer" spacing="15" VBox.vgrow="ALWAYS" managed="false" visible="false">
+        <!-- Form -->
+        <VBox style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 20; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
+            <HBox style="-fx-padding: 0 0 15 0;">
+                <Label text="Add Employee Expense" textFill="#0F172A">
+                    <font>
+                        <Font size="14" name="Segoe UI Bold"/>
+                    </font>
+                </Label>
+            </HBox>
+
+            <HBox spacing="20">
+                <VBox spacing="5" prefWidth="200">
+                    <Label text="Employee" textFill="#64748b">
+                        <font>
+                            <Font size="12" name="Segoe UI"/>
+                        </font>
+                    </Label>
+                    <ComboBox fx:id="cmbExpenseEmployee" promptText="Select Employee" prefWidth="190"
+                              style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
+                </VBox>
+
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Note" textFill="#64748b">
+                        <font>
+                            <Font size="12" name="Segoe UI"/>
+                        </font>
+                    </Label>
+                    <TextField fx:id="txtEENote" promptText="Enter note"
+                               style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
+                </VBox>
+
+                <VBox spacing="5" prefWidth="120">
+                    <Label text="Amount (Rs.)" textFill="#64748b">
+                        <font>
+                            <Font size="12" name="Segoe UI"/>
+                        </font>
+                    </Label>
+                    <TextField fx:id="txtEEAmount" promptText="Enter amount"
+                               style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
+                </VBox>
+
+                <VBox spacing="5" prefWidth="150">
+                    <Label text="Date" textFill="#64748b">
+                        <font>
+                            <Font size="12" name="Segoe UI"/>
+                        </font>
+                    </Label>
+                    <DatePicker fx:id="dpEEDate" prefWidth="140" style="-fx-background-radius: 5;"/>
+                </VBox>
+
+                <VBox spacing="5" alignment="BOTTOM_LEFT">
+                    <Button fx:id="btnAddEmployeeExpense" text="Add" onAction="#addEmployeeExpense" prefWidth="100" prefHeight="38"
+                            style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13; -fx-font-weight: bold; -fx-cursor: hand;"/>
+                </VBox>
+
+                <VBox spacing="5" alignment="BOTTOM_LEFT">
+                    <Button text="Clear" onAction="#clearEEFields" prefWidth="100" prefHeight="38"
+                            style="-fx-background-color: #64748b; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13; -fx-font-weight: bold; -fx-cursor: hand;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+
+        <!-- Table -->
+        <VBox VBox.vgrow="ALWAYS" style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 12; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
+            <HBox style="-fx-padding: 0 0 10 0;">
+                <Label text="Employee Expenses" textFill="#0F172A">
+                    <font>
+                        <Font size="14" name="Segoe UI Bold"/>
+                    </font>
+                </Label>
+            </HBox>
+
+            <TableView fx:id="tblEmployeeExpenses" VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 4; -fx-table-cell-border-color: #e2e8f0;">
+                <columns>
+                    <TableColumn fx:id="colEEEmployee" text="Employee" prefWidth="150" style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colEENote" text="Note" prefWidth="200" style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colEEAmount" text="Amount" prefWidth="100" style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colEEDate" text="Date" prefWidth="100" style="-fx-alignment: CENTER;"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </VBox>
+
+    <!-- Shop Expenses Container -->
+    <VBox fx:id="shopExpenseContainer" spacing="15" VBox.vgrow="ALWAYS" managed="false" visible="false">
+        <!-- Form -->
+        <VBox style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 20; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
+            <HBox style="-fx-padding: 0 0 15 0;">
+                <Label text="Add Shop Expense" textFill="#0F172A">
+                    <font>
+                        <Font size="14" name="Segoe UI Bold"/>
+                    </font>
+                </Label>
+            </HBox>
+
+            <HBox spacing="20">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Note" textFill="#64748b">
+                        <font>
+                            <Font size="12" name="Segoe UI"/>
+                        </font>
+                    </Label>
+                    <TextField fx:id="txtSENote" promptText="Enter note"
+                               style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
+                </VBox>
+
+                <VBox spacing="5" prefWidth="120">
+                    <Label text="Amount (Rs.)" textFill="#64748b">
+                        <font>
+                            <Font size="12" name="Segoe UI"/>
+                        </font>
+                    </Label>
+                    <TextField fx:id="txtSEAmount" promptText="Enter amount"
+                               style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
+                </VBox>
+
+                <VBox spacing="5" prefWidth="150">
+                    <Label text="Date" textFill="#64748b">
+                        <font>
+                            <Font size="12" name="Segoe UI"/>
+                        </font>
+                    </Label>
+                    <DatePicker fx:id="dpSEDate" prefWidth="140" style="-fx-background-radius: 5;"/>
+                </VBox>
+
+                <VBox spacing="5" alignment="BOTTOM_LEFT">
+                    <Button fx:id="btnAddShopExpense" text="Add" onAction="#addShopExpense" prefWidth="100" prefHeight="38"
+                            style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13; -fx-font-weight: bold; -fx-cursor: hand;"/>
+                </VBox>
+
+                <VBox spacing="5" alignment="BOTTOM_LEFT">
+                    <Button text="Clear" onAction="#clearSEFields" prefWidth="100" prefHeight="38"
+                            style="-fx-background-color: #64748b; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13; -fx-font-weight: bold; -fx-cursor: hand;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+
+        <!-- Table -->
+        <VBox VBox.vgrow="ALWAYS" style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 12; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
+            <HBox style="-fx-padding: 0 0 10 0;">
+                <Label text="Shop Expenses" textFill="#0F172A">
+                    <font>
+                        <Font size="14" name="Segoe UI Bold"/>
+                    </font>
+                </Label>
+            </HBox>
+
+            <TableView fx:id="tblShopExpenses" VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 4; -fx-table-cell-border-color: #e2e8f0;">
+                <columns>
+                    <TableColumn fx:id="colSENote" text="Note" prefWidth="250" style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colSEAmount" text="Amount" prefWidth="100" style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colSEDate" text="Date" prefWidth="100" style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colSEAction" text="Action" prefWidth="120" minWidth="100" style="-fx-alignment: CENTER;"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </VBox>
 
 </VBox>

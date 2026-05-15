@@ -5,6 +5,7 @@ import com.chickencenter.model.Sale;
 import com.chickencenter.model.SaleItem;
 import com.chickencenter.service.BillingService;
 import com.chickencenter.service.ProductService;
+import com.chickencenter.util.DropdownUtils;
 import com.chickencenter.util.ToastManager;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -129,6 +130,8 @@ public class BillingController {
             }
             enterKeyPressed = false;
         });
+        DropdownUtils.makeScrollable(cmbProduct);
+        DropdownUtils.makeScrollable(cmbPaymentMode);
         resetForm();
     }
 
@@ -457,7 +460,12 @@ public class BillingController {
         try {
             createNewSaleIfNeeded();
             double effectivePrice = getEffectivePrice(selectedProduct, quantity);
-            SaleItem saleItem = new SaleItem(currentSale.getId(), selectedProduct.getId(), selectedProduct.getCurrentBatchId(), quantity, amount, effectivePrice);
+            int batchId = selectedProduct.getCurrentBatchId();
+            if (selectedProduct.getParentProductId() != null && selectedProduct.getParentProductId() > 0) {
+                Product parent = productService.getProduct(selectedProduct.getParentProductId());
+                if (parent != null) batchId = parent.getCurrentBatchId();
+            }
+            SaleItem saleItem = new SaleItem(currentSale.getId(), selectedProduct.getId(), batchId, quantity, amount, effectivePrice);
             saleItem.setDiscountAmount(discount);
             int itemId = billingService.addItemToCart(saleItem);
             saleItem.setId(itemId);

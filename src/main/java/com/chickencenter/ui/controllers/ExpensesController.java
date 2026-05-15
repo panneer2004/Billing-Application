@@ -4,6 +4,7 @@ import com.chickencenter.model.EmployeeExpense;
 import com.chickencenter.model.ShopExpense;
 import com.chickencenter.model.VendorExpense;
 import com.chickencenter.service.ExpenseService;
+import com.chickencenter.util.DropdownUtils;
 import com.chickencenter.util.ToastManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -11,6 +12,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.converter.DoubleStringConverter;
@@ -26,13 +28,17 @@ import java.time.format.DateTimeFormatter;
 
 public class ExpensesController {
     @FXML
-    private TabPane tabPane;
+    private Button btnVendorView;
     @FXML
-    private Tab tabVendorExpenses;
+    private Button btnEmployeeView;
     @FXML
-    private Tab tabEmployeeExpenses;
+    private Button btnShopView;
     @FXML
-    private Tab tabShopExpenses;
+    private VBox vendorExpenseContainer;
+    @FXML
+    private VBox employeeExpenseContainer;
+    @FXML
+    private VBox shopExpenseContainer;
     @FXML
     private DatePicker dpFromDate;
     @FXML
@@ -106,6 +112,8 @@ public class ExpensesController {
     private boolean isShopExpenseEditMode = false;
     private int editingShopExpenseId = 0;
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private final String activeTabStyle = "-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 6; -fx-font-size: 12; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 6 16;";
+    private final String inactiveTabStyle = "-fx-background-color: #e2e8f0; -fx-text-fill: #64748b; -fx-background-radius: 6; -fx-font-size: 12; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 6 16;";
 
     public ExpensesController() {
         this.expenseService = new ExpenseService();
@@ -160,6 +168,48 @@ public class ExpensesController {
         dpToDate.setValue(LocalDate.now());
         dpFromDate.setOnAction(e -> filterAllExpenses());
         dpToDate.setOnAction(e -> filterAllExpenses());
+        DropdownUtils.makeScrollable(cmbExpenseVendor);
+        DropdownUtils.makeScrollable(cmbExpenseEmployee);
+        showVendorView();
+    }
+
+    @FXML
+    private void showVendorView() {
+        vendorExpenseContainer.setVisible(true);
+        vendorExpenseContainer.setManaged(true);
+        employeeExpenseContainer.setVisible(false);
+        employeeExpenseContainer.setManaged(false);
+        shopExpenseContainer.setVisible(false);
+        shopExpenseContainer.setManaged(false);
+        btnVendorView.setStyle(activeTabStyle);
+        btnEmployeeView.setStyle(inactiveTabStyle);
+        btnShopView.setStyle(inactiveTabStyle);
+    }
+
+    @FXML
+    private void showEmployeeView() {
+        vendorExpenseContainer.setVisible(false);
+        vendorExpenseContainer.setManaged(false);
+        employeeExpenseContainer.setVisible(true);
+        employeeExpenseContainer.setManaged(true);
+        shopExpenseContainer.setVisible(false);
+        shopExpenseContainer.setManaged(false);
+        btnEmployeeView.setStyle(activeTabStyle);
+        btnVendorView.setStyle(inactiveTabStyle);
+        btnShopView.setStyle(inactiveTabStyle);
+    }
+
+    @FXML
+    private void showShopView() {
+        vendorExpenseContainer.setVisible(false);
+        vendorExpenseContainer.setManaged(false);
+        employeeExpenseContainer.setVisible(false);
+        employeeExpenseContainer.setManaged(false);
+        shopExpenseContainer.setVisible(true);
+        shopExpenseContainer.setManaged(true);
+        btnShopView.setStyle(activeTabStyle);
+        btnVendorView.setStyle(inactiveTabStyle);
+        btnEmployeeView.setStyle(inactiveTabStyle);
     }
 
     private void setupNumericField(TextField field) {

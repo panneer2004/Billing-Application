@@ -217,8 +217,33 @@ public class DatabaseInitializer {
             addColumnIfNotExists(stmt, "account", "contact_no3", "TEXT");
             addColumnIfNotExists(stmt, "account", "password", "TEXT");
             addColumnIfNotExists(stmt, "account", "is_locked", "INTEGER DEFAULT 0");
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS sale_batch_consumption (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    sale_id INTEGER NOT NULL,
+                    sale_item_id INTEGER NOT NULL,
+                    item_id INTEGER NOT NULL,
+                    batch_id INTEGER NOT NULL,
+                    consumed_quantity REAL NOT NULL,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (sale_id) REFERENCES sales(id),
+                    FOREIGN KEY (sale_item_id) REFERENCES sale_items(id)
+                )
+            """);
+
             addColumnIfNotExists(stmt, "purchases", "rate", "REAL DEFAULT 0");
+            boolean balanceColumnAdded = addColumnIfNotExists(stmt, "purchases", "balance_quantity", "REAL DEFAULT 0");
             addColumnIfNotExists(stmt, "sale_items", "discount_amount", "REAL DEFAULT 0");
+
+            if (balanceColumnAdded) {
+                stmt.execute("""
+                    UPDATE purchases SET balance_quantity = batch_quantity - COALESCE((
+                        SELECT SUM(si.quantity) FROM sale_items si
+                        WHERE si.item_id = purchases.item_id AND si.batch_id = purchases.item_batch_id
+                    ), 0) WHERE COALESCE(balance_quantity, 0) = 0 AND batch_quantity > 0
+                """);
+                System.out.println("Migrated existing purchase records with balance_quantity.");
+            }
 
             ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM account");
             if (rs.next() && rs.getInt(1) == 0) {
@@ -235,7 +260,7 @@ public class DatabaseInitializer {
         }
     }
     
-    private static void addColumnIfNotExists(Statement stmt, String tableName, String columnName, String definition) throws SQLException {
+    private static boolean addColumnIfNotExists(Statement stmt, String tableName, String columnName, String definition) throws SQLException {
         ResultSet rs = stmt.executeQuery("PRAGMA table_info(" + tableName + ")");
         boolean columnExists = false;
         while (rs.next()) {
@@ -246,7 +271,9 @@ public class DatabaseInitializer {
         }
         if (!columnExists) {
             stmt.execute("ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + definition);
+            return true;
         }
+        return false;
     }
 
     private static void restoreMissingProducts(Statement stmt) throws SQLException {

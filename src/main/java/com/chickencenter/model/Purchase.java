@@ -6,6 +6,7 @@ public class Purchase {
     private int itemId;
     private int vendorId;
     private double batchQuantity;
+    private double balanceQuantity;
     private double rate;
     private double totalAmount;
     private String createdAt;
@@ -17,6 +18,7 @@ public class Purchase {
         this.itemId = itemId;
         this.vendorId = vendorId;
         this.batchQuantity = batchQuantity;
+        this.balanceQuantity = batchQuantity;
         this.rate = rate;
         this.totalAmount = totalAmount;
     }
@@ -31,6 +33,8 @@ public class Purchase {
     public void setVendorId(int vendorId) { this.vendorId = vendorId; }
     public double getBatchQuantity() { return batchQuantity; }
     public void setBatchQuantity(double batchQuantity) { this.batchQuantity = batchQuantity; }
+    public double getBalanceQuantity() { return balanceQuantity; }
+    public void setBalanceQuantity(double balanceQuantity) { this.balanceQuantity = balanceQuantity; }
     public double getRate() { return rate; }
     public void setRate(double rate) { this.rate = rate; }
     public double getTotalAmount() { return totalAmount; }

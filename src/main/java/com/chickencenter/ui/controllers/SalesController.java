@@ -5,6 +5,7 @@ import com.chickencenter.model.Sale;
 import com.chickencenter.model.SaleItem;
 import com.chickencenter.service.BillingService;
 import com.chickencenter.service.ProductService;
+import com.chickencenter.util.DropdownUtils;
 import com.chickencenter.util.ToastManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -53,6 +54,19 @@ public class SalesController {
     @FXML private VBox itemViewContainer;
     @FXML private Button btnSaleView;
     @FXML private Button btnItemView;
+    @FXML private DatePicker itemDpFromDate;
+    @FXML private DatePicker itemDpToDate;
+    @FXML private ComboBox<Product> cmbItemProduct;
+    @FXML private ComboBox<Integer> cmbItemBatch;
+    @FXML private TableView<ItemSaleRecord> tblItemSales;
+    @FXML private TableColumn<ItemSaleRecord, Integer> colBillNo;
+    @FXML private TableColumn<ItemSaleRecord, String> colItemProduct;
+    @FXML private TableColumn<ItemSaleRecord, Integer> colItemBatchId;
+    @FXML private TableColumn<ItemSaleRecord, Double> colItemQty;
+    @FXML private TableColumn<ItemSaleRecord, Double> colItemAmount;
+    @FXML private Label lblTotalItemQty;
+    @FXML private Label lblTotalItemAmount;
+    @FXML private Label lblItemEmptyState;
 
     private final String activeTabStyle = "-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 6; -fx-font-size: 12; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 6 16;";
     private final String inactiveTabStyle = "-fx-background-color: #e2e8f0; -fx-text-fill: #64748b; -fx-background-radius: 6; -fx-font-size: 12; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 6 16;";
@@ -61,12 +75,41 @@ public class SalesController {
     private final ProductService productService;
     private final ObservableList<Sale> salesList;
     private final ObservableList<Product> productList;
+    private final ObservableList<Product> itemProductList;
+    private final ObservableList<ItemSaleRecord> itemSaleList;
 
     public SalesController() {
         this.billingService = new BillingService();
         this.productService = new ProductService();
         this.salesList = FXCollections.observableArrayList();
         this.productList = FXCollections.observableArrayList();
+        this.itemProductList = FXCollections.observableArrayList();
+        this.itemSaleList = FXCollections.observableArrayList();
+    }
+
+    public static class ItemSaleRecord {
+        private final int billNo;
+        private final String productName;
+        private final int batchId;
+        private final double quantity;
+        private final double price;
+        private final double amount;
+
+        public ItemSaleRecord(int billNo, String productName, int batchId, double quantity, double price, double amount) {
+            this.billNo = billNo;
+            this.productName = productName != null ? productName : "";
+            this.batchId = batchId;
+            this.quantity = quantity;
+            this.price = price;
+            this.amount = amount;
+        }
+
+        public int getBillNo() { return billNo; }
+        public String getProductName() { return productName; }
+        public int getBatchId() { return batchId; }
+        public double getQuantity() { return quantity; }
+        public double getPrice() { return price; }
+        public double getAmount() { return amount; }
     }
 
     @FXML
@@ -82,6 +125,29 @@ public class SalesController {
         filterSales();
         dpFromDate.setOnAction(e -> filterSales());
         dpToDate.setOnAction(e -> filterSales());
+
+        setupItemTable();
+        populateItemProductDropdown();
+        DropdownUtils.makeScrollable(cmbItemProduct);
+        DropdownUtils.makeScrollable(cmbItemBatch);
+        itemDpFromDate.setValue(LocalDate.now());
+        itemDpToDate.setValue(LocalDate.now());
+        itemDpFromDate.setOnAction(e -> {
+            loadItemBatches();
+            loadItemSales();
+        });
+        itemDpToDate.setOnAction(e -> {
+            loadItemBatches();
+            loadItemSales();
+        });
+        cmbItemProduct.setOnAction(e -> {
+            loadItemBatches();
+            loadItemSales();
+        });
+        cmbItemBatch.setOnAction(e -> loadItemSales());
+        loadItemBatches();
+        loadItemSales();
+
         showSaleView();
     }
 
@@ -103,6 +169,7 @@ public class SalesController {
         itemViewContainer.setManaged(true);
         btnItemView.setStyle(activeTabStyle);
         btnSaleView.setStyle(inactiveTabStyle);
+        loadItemSales();
     }
 
     public void refreshSales() {
@@ -272,6 +339,211 @@ public class SalesController {
         }
     }
 
+    private void setupItemTable() {
+        tblItemSales.setSelectionModel(null);
+        tblItemSales.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblItemSales.setPlaceholder(new Label(""));
+        tblItemSales.setItems(itemSaleList);
+
+        colBillNo.setCellValueFactory(new PropertyValueFactory<>("billNo"));
+        colBillNo.setCellFactory(col -> new TableCell<ItemSaleRecord, Integer>() {
+            @Override
+            protected void updateItem(Integer item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : String.valueOf(item));
+                setStyle("-fx-alignment: CENTER; -fx-font-size: 12;");
+            }
+        });
+
+        colItemProduct.setCellValueFactory(new PropertyValueFactory<>("productName"));
+        colItemProduct.setCellFactory(col -> new TableCell<ItemSaleRecord, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item);
+                setStyle("-fx-alignment: CENTER; -fx-font-size: 12;");
+            }
+        });
+
+        colItemBatchId.setCellValueFactory(new PropertyValueFactory<>("batchId"));
+        colItemBatchId.setCellFactory(col -> new TableCell<ItemSaleRecord, Integer>() {
+            @Override
+            protected void updateItem(Integer item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : String.valueOf(item));
+                setStyle("-fx-alignment: CENTER; -fx-font-size: 12;");
+            }
+        });
+
+        colItemQty.setCellValueFactory(new PropertyValueFactory<>("quantity"));
+        colItemQty.setCellFactory(col -> new TableCell<ItemSaleRecord, Double>() {
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) { setText(null); }
+                else {
+                    String display = item % 1 == 0 ? String.valueOf((int) item.doubleValue()) : String.format("%.2f", item);
+                    setText(display);
+                }
+                setStyle("-fx-alignment: CENTER; -fx-font-size: 12;");
+            }
+        });
+
+        colItemAmount.setCellValueFactory(new PropertyValueFactory<>("amount"));
+        colItemAmount.setCellFactory(col -> new TableCell<ItemSaleRecord, Double>() {
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) { setText(null); }
+                else { setText("Rs. " + String.format("%.2f", item)); }
+                setStyle("-fx-alignment: CENTER; -fx-font-size: 12;");
+            }
+        });
+    }
+
+    private void populateItemProductDropdown() {
+        try {
+            List<Product> allProducts = productService.getAllProducts();
+            itemProductList.clear();
+            Product allOption = new Product();
+            allOption.setId(-1);
+            allOption.setProductName("All Products");
+            itemProductList.add(allOption);
+            for (Product p : allProducts) {
+                itemProductList.add(p);
+            }
+            cmbItemProduct.setItems(itemProductList);
+            cmbItemProduct.setCellFactory(lv -> new javafx.scene.control.ListCell<Product>() {
+                @Override
+                protected void updateItem(Product p, boolean empty) {
+                    super.updateItem(p, empty);
+                    setText(empty || p == null ? null : p.getProductName());
+                }
+            });
+            cmbItemProduct.setButtonCell(new javafx.scene.control.ListCell<Product>() {
+                @Override
+                protected void updateItem(Product p, boolean empty) {
+                    super.updateItem(p, empty);
+                    setText(empty || p == null ? null : p.getProductName());
+                }
+            });
+            cmbItemProduct.getSelectionModel().select(0);
+        } catch (SQLException e) {
+            showError("Error loading products: " + e.getMessage());
+        }
+    }
+
+    private void loadItemBatches() {
+        LocalDate fromDate = itemDpFromDate.getValue();
+        LocalDate toDate = itemDpToDate.getValue();
+        if (fromDate == null || toDate == null) {
+            cmbItemBatch.setDisable(true);
+            cmbItemBatch.setPromptText("No Batch Available");
+            cmbItemBatch.setItems(FXCollections.observableArrayList());
+            return;
+        }
+        Product selected = cmbItemProduct.getSelectionModel().getSelectedItem();
+        try {
+            List<Integer> batches;
+            if (selected != null && selected.getId() > 0) {
+                batches = billingService.getDistinctBatchesForProduct(selected.getId(), fromDate, toDate);
+            } else {
+                batches = billingService.getDistinctBatches(fromDate, toDate);
+            }
+            if (batches.isEmpty()) {
+                cmbItemBatch.setDisable(true);
+                cmbItemBatch.setPromptText("No Batch Available");
+                cmbItemBatch.setItems(FXCollections.observableArrayList());
+                cmbItemBatch.getSelectionModel().clearSelection();
+                cmbItemBatch.setValue(null);
+            } else {
+                cmbItemBatch.setDisable(false);
+                cmbItemBatch.setPromptText("All Batches");
+                ObservableList<Integer> batchOptions = FXCollections.observableArrayList();
+                batchOptions.add(-1);
+                batchOptions.addAll(batches);
+                cmbItemBatch.setItems(batchOptions);
+                cmbItemBatch.setCellFactory(lv -> {
+                    javafx.scene.control.ListCell<Integer> cell = new javafx.scene.control.ListCell<>() {
+                        @Override
+                        protected void updateItem(Integer b, boolean empty) {
+                            super.updateItem(b, empty);
+                            if (empty || b == null) {
+                                setText(null);
+                                setGraphic(null);
+                            } else if (b == -1) {
+                                setText("All Batches");
+                            } else {
+                                setText("Batch " + b);
+                            }
+                        }
+                    };
+                    cell.setPrefHeight(36);
+                    return cell;
+                });
+                cmbItemBatch.setButtonCell(new javafx.scene.control.ListCell<Integer>() {
+                    @Override
+                    protected void updateItem(Integer b, boolean empty) {
+                        super.updateItem(b, empty);
+                        if (empty || b == null) {
+                            setText(null);
+                        } else if (b == -1) {
+                            setText("All Batches");
+                        } else {
+                            setText("Batch " + b);
+                        }
+                    }
+                });
+                cmbItemBatch.getSelectionModel().select(0);
+            }
+        } catch (SQLException e) {
+            cmbItemBatch.setDisable(true);
+            cmbItemBatch.setPromptText("No Batch Available");
+            cmbItemBatch.setItems(FXCollections.observableArrayList());
+        }
+    }
+
+    private void loadItemSales() {
+        LocalDate fromDate = itemDpFromDate.getValue();
+        LocalDate toDate = itemDpToDate.getValue();
+        if (fromDate == null || toDate == null) return;
+
+        Product selectedProduct = cmbItemProduct.getSelectionModel().getSelectedItem();
+        Integer selectedBatch = cmbItemBatch.getSelectionModel().getSelectedItem();
+        if (selectedBatch != null && selectedBatch == -1) selectedBatch = null;
+
+        Integer productId = (selectedProduct != null && selectedProduct.getId() > 0) ? selectedProduct.getId() : null;
+
+        try {
+            List<Object[]> rows = billingService.getItemSales(fromDate, toDate, productId, selectedBatch);
+            itemSaleList.clear();
+            double totalQty = 0;
+            double totalAmount = 0;
+            for (Object[] row : rows) {
+                int billNo = (int) row[0];
+                String prodName = (String) row[1];
+                int batchId = row[2] != null ? (int) row[2] : 0;
+                double qty = (double) row[3];
+                double price = (double) row[4];
+                double amount = (double) row[5];
+                itemSaleList.add(new ItemSaleRecord(billNo, prodName, batchId, qty, price, amount));
+                totalQty += qty;
+                totalAmount += amount;
+            }
+            boolean hasData = !rows.isEmpty();
+            lblItemEmptyState.setVisible(!hasData);
+            lblItemEmptyState.setManaged(!hasData);
+
+            tblItemSales.setItems(itemSaleList);
+            tblItemSales.refresh();
+
+            String qtyDisplay = totalQty % 1 == 0 ? String.valueOf((int) totalQty) : String.format("%.2f", totalQty);
+            lblTotalItemQty.setText(qtyDisplay);
+            lblTotalItemAmount.setText("Rs. " + String.format("%.2f", totalAmount));
+        } catch (SQLException e) {
+            showError("Error loading item sales: " + e.getMessage());
+        }
+    }
 
     @FXML
     private void filterSales() {

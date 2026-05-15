@@ -3,6 +3,7 @@ package com.chickencenter.ui.controllers;
 import com.chickencenter.model.Product;
 import com.chickencenter.model.Vendor;
 import com.chickencenter.service.ProductService;
+import com.chickencenter.util.DropdownUtils;
 import com.chickencenter.util.ToastManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -13,7 +14,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -33,8 +33,6 @@ public class ProductsController {
     private TableColumn<Product, Integer> colBatchId;
     @FXML
     private TableColumn<Product, Boolean> colBatchControl;
-    @FXML
-    private TableColumn<Product, String> colCreatedAt;
     @FXML
     private TableColumn<Product, String> colLastModified;
     @FXML
@@ -141,6 +139,9 @@ public class ProductsController {
             }
         });
         cmbVendor.setPromptText("Choose Vendor");
+        DropdownUtils.makeScrollable(cmbUnit);
+        DropdownUtils.makeScrollable(cmbVendor);
+        DropdownUtils.makeScrollable(cmbParentProduct);
         tblProducts.setRowFactory(tv -> {
             TableRow<Product> row = new TableRow<>();
             row.setPrefHeight(44);
@@ -199,6 +200,13 @@ public class ProductsController {
                 return new javafx.beans.property.SimpleStringProperty("");
             }
         });
+        colStock.setCellValueFactory(cellData -> {
+            Product p = cellData.getValue();
+            double s = p.getStock();
+            String unit = p.getUnit() != null ? p.getUnit() : "";
+            String display = s % 1 == 0 ? String.valueOf((int) s) : String.format("%.2f", s);
+            return new javafx.beans.property.SimpleStringProperty(display + " " + unit);
+        });
         colStock.setCellFactory(col -> new TableCell<Product, String>() {
             {
                 setAlignment(Pos.CENTER);
@@ -206,23 +214,17 @@ public class ProductsController {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                if (empty || item == null) {
                     setText(null);
                     setStyle("");
                 } else {
-                    Product product = getTableRow().getItem();
-                    double stock;
-                    try {
-                        stock = productService.getTotalAvailableStock(product.getId());
-                    } catch (SQLException e) {
-                        stock = 0;
-                    }
-                    String unit = product.getUnit() != null ? product.getUnit() : "";
-                    String display = stock % 1 == 0 ? String.valueOf((int) stock) : String.format("%.2f", stock);
-                    setText(display + " " + unit);
-                    if (stock <= 0) {
+                    setText(item);
+                    String numPart = item.replaceAll("[^0-9.\\-].*$", "").trim();
+                    double val = 0;
+                    try { val = Double.parseDouble(numPart); } catch (NumberFormatException ignored) {}
+                    if (val <= 0) {
                         setTextFill(javafx.scene.paint.Paint.valueOf("#ef4444"));
-                    } else if (stock <= 5) {
+                    } else if (val <= 5) {
                         setTextFill(javafx.scene.paint.Paint.valueOf("#f59e0b"));
                     } else {
                         setTextFill(javafx.scene.paint.Paint.valueOf("#10b981"));
@@ -234,7 +236,17 @@ public class ProductsController {
             double price = cellData.getValue().getPrice();
             return new javafx.beans.property.SimpleObjectProperty<>(price);
         });
-        colBatchId.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getCurrentBatchId()).asObject());
+        colBatchId.setCellValueFactory(cellData -> {
+            Product p = cellData.getValue();
+            int bid = p.getCurrentBatchId();
+            if (p.getParentProductId() != null && p.getParentProductId() > 0) {
+                try {
+                    Product parent = productService.getProduct(p.getParentProductId());
+                    if (parent != null) bid = parent.getCurrentBatchId();
+                } catch (SQLException ignored) {}
+            }
+            return new javafx.beans.property.SimpleIntegerProperty(bid).asObject();
+        });
         colBatchControl.setCellFactory(col -> new TableCell<Product, Boolean>() {
             private final HBox hbox = new HBox(5);
             private final Button btnPrev = new Button("Prev");
@@ -263,13 +275,6 @@ public class ProductsController {
                     setGraphic(hbox);
                 }
             }
-        });
-        colCreatedAt.setCellValueFactory(cellData -> {
-            LocalDate createdAt = cellData.getValue().getCreatedAt();
-            if (createdAt != null) {
-                return new javafx.beans.property.SimpleStringProperty(createdAt.format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
-            }
-            return new javafx.beans.property.SimpleStringProperty("");
         });
         colLastModified.setCellValueFactory(cellData -> {
             java.time.LocalDateTime lastModified = cellData.getValue().getLastModifiedAt();
@@ -319,10 +324,10 @@ public class ProductsController {
         if (result.isPresent() && result.get() == ButtonType.OK) {
             try {
                 int currentBatchId = product.getCurrentBatchId();
-                int productId = product.getId();
-                boolean hasNext = productService.batchExists(productId, currentBatchId + 1);
+                int effectiveId = productService.getEffectiveProductId(product);
+                boolean hasNext = productService.batchExists(effectiveId, currentBatchId + 1);
                 if (hasNext) {
-                    productService.updateBatch(productId, currentBatchId + 1);
+                    productService.updateBatch(effectiveId, currentBatchId + 1);
                     loadProducts();
                 } else {
                     showError("No next batch available. Please purchase stock.");
@@ -342,9 +347,9 @@ public class ProductsController {
         if (result.isPresent() && result.get() == ButtonType.OK) {
             try {
                 int currentBatchId = product.getCurrentBatchId();
-                int productId = product.getId();
+                int effectiveId = productService.getEffectiveProductId(product);
                 if (currentBatchId > 0) {
-                    productService.updateBatch(productId, currentBatchId - 1);
+                    productService.updateBatch(effectiveId, currentBatchId - 1);
                     loadProducts();
                 } else {
                     showError("Already at first batch");
@@ -408,9 +413,30 @@ public class ProductsController {
     private void loadProducts() {
         try {
             productList.clear();
-            productList.addAll(productService.getAllProducts());
+            List<Product> products = productService.getAllProducts();
+            for (Product product : products) {
+                syncStockWithActiveBatch(product);
+            }
+            productList.addAll(products);
         } catch (SQLException e) {
             showError("Error loading products: " + e.getMessage());
+        }
+    }
+
+    private void syncStockWithActiveBatch(Product product) {
+        try {
+            if (!"STOCK".equalsIgnoreCase(product.getProductSource())) {
+                if (product.getParentProductId() != null && product.getParentProductId() > 0) {
+                    Product parent = productService.getProduct(product.getParentProductId());
+                    if (parent != null) {
+                        product.setCurrentBatchId(parent.getCurrentBatchId());
+                    }
+                }
+                double balance = productService.getCurrentBatchBalance(product.getId());
+                product.setStock(balance);
+            }
+        } catch (SQLException e) {
+            product.setStock(0);
         }
     }
 

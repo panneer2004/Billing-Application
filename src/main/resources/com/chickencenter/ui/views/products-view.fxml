@@ -137,8 +137,7 @@
                 <TableColumn fx:id="colPrice" text="Price" prefWidth="80" style="-fx-alignment: CENTER;"/>
                 <TableColumn fx:id="colBatchId" text="Batch" prefWidth="60" style="-fx-alignment: CENTER;"/>
                 <TableColumn fx:id="colBatchControl" text="Batch Control" prefWidth="100" style="-fx-alignment: CENTER;"/>
-                <TableColumn fx:id="colCreatedAt" text="Created" prefWidth="90" style="-fx-alignment: CENTER;"/>
-                <TableColumn fx:id="colLastModified" text="Modified" prefWidth="90" style="-fx-alignment: CENTER;"/>
+                <TableColumn fx:id="colLastModified" text="Modified" prefWidth="100" style="-fx-alignment: CENTER;"/>
                 <TableColumn fx:id="colAction" text="Action" prefWidth="120" minWidth="100" style="-fx-alignment: CENTER;"/>
             </columns>
         </TableView>

@@ -2,6 +2,7 @@ package com.chickencenter.ui.controllers;
 
 import com.chickencenter.dao.PurchaseDAO;
 import com.chickencenter.service.ProductService;
+import com.chickencenter.util.DropdownUtils;
 import com.chickencenter.util.ToastManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -36,6 +37,7 @@ public class PurchaseController {
     @FXML private TableColumn<PurchaseDAO.PurchaseWithDetails, String> colVendorName;
     @FXML private TableColumn<PurchaseDAO.PurchaseWithDetails, Integer> colBatchId;
     @FXML private TableColumn<PurchaseDAO.PurchaseWithDetails, Double> colQuantity;
+    @FXML private TableColumn<PurchaseDAO.PurchaseWithDetails, Double> colBalanceQty;
     @FXML private TableColumn<PurchaseDAO.PurchaseWithDetails, Double> colRate;
     @FXML private TableColumn<PurchaseDAO.PurchaseWithDetails, Double> colTotalAmount;
     @FXML private TableColumn<PurchaseDAO.PurchaseWithDetails, Boolean> colAction;
@@ -92,6 +94,7 @@ public class PurchaseController {
         cmbProduct.setPromptText("Choose Product");
 
         cmbProduct.setOnAction(e -> loadProductDetails());
+        DropdownUtils.makeScrollable(cmbProduct);
     }
 
     private void setupNumericField(TextField field) {
@@ -128,6 +131,29 @@ public class PurchaseController {
 
         colQuantity.setCellValueFactory(cellData ->
                 new javafx.beans.property.SimpleDoubleProperty(cellData.getValue().getBatchQuantity()).asObject());
+
+        colBalanceQty.setCellValueFactory(cellData ->
+                new javafx.beans.property.SimpleDoubleProperty(cellData.getValue().getBalanceQuantity()).asObject());
+        colBalanceQty.setCellFactory(col -> new TableCell<PurchaseDAO.PurchaseWithDetails, Double>() {
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(item % 1 == 0 ? String.valueOf(item.intValue()) : String.format("%.2f", item));
+                    setAlignment(Pos.CENTER);
+                    if (item == 0) {
+                        setStyle("-fx-text-fill: #ef4444; -fx-font-weight: bold;");
+                    } else if (item <= 20) {
+                        setStyle("-fx-text-fill: #f97316; -fx-font-weight: bold;");
+                    } else {
+                        setStyle("-fx-text-fill: #22c55e; -fx-font-weight: bold;");
+                    }
+                }
+            }
+        });
 
         colRate.setCellValueFactory(cellData ->
                 new javafx.beans.property.SimpleDoubleProperty(cellData.getValue().getRate()).asObject());
@@ -362,7 +388,7 @@ public class PurchaseController {
                 Sheet sheet = workbook.createSheet("Purchase Report");
 
                 Row headerRow = sheet.createRow(0);
-                String[] headers = {"Sl No", "Product Name", "Vendor", "Batch ID", "Quantity", "Rate", "Amount"};
+                String[] headers = {"Sl No", "Product Name", "Vendor", "Batch ID", "Quantity", "Balance Qty", "Rate", "Amount"};
                 for (int i = 0; i < headers.length; i++) {
                     Cell cell = headerRow.createCell(i);
                     cell.setCellValue(headers[i]);
@@ -383,8 +409,9 @@ public class PurchaseController {
                     row.createCell(2).setCellValue(p.getVendorName());
                     row.createCell(3).setCellValue(p.getItemBatchId());
                     row.createCell(4).setCellValue(p.getBatchQuantity());
-                    row.createCell(5).setCellValue(p.getRate());
-                    row.createCell(6).setCellValue(p.getTotalAmount());
+                    row.createCell(5).setCellValue(p.getBalanceQuantity());
+                    row.createCell(6).setCellValue(p.getRate());
+                    row.createCell(7).setCellValue(p.getTotalAmount());
                 }
 
                 for (int i = 0; i < headers.length; i++) {

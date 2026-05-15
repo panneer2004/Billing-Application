@@ -116,7 +116,8 @@
                 <TableColumn fx:id="colProductName" text="Product" prefWidth="140" style="-fx-alignment: CENTER;"/>
                 <TableColumn fx:id="colVendorName" text="Vendor" prefWidth="110" style="-fx-alignment: CENTER;"/>
                 <TableColumn fx:id="colBatchId" text="Batch" prefWidth="60" style="-fx-alignment: CENTER;"/>
-                <TableColumn fx:id="colQuantity" text="Quantity" prefWidth="80" style="-fx-alignment: CENTER;"/>
+                <TableColumn fx:id="colQuantity" text="Qty" prefWidth="70" style="-fx-alignment: CENTER;"/>
+                <TableColumn fx:id="colBalanceQty" text="Balance Qty" prefWidth="100" style="-fx-alignment: CENTER;"/>
                 <TableColumn fx:id="colRate" text="Rate" prefWidth="80" style="-fx-alignment: CENTER;"/>
                 <TableColumn fx:id="colTotalAmount" text="Amount" prefWidth="100" style="-fx-alignment: CENTER;"/>
                 <TableColumn fx:id="colAction" text="Action" prefWidth="110" minWidth="100" style="-fx-alignment: CENTER;"/>

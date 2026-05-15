@@ -2,6 +2,7 @@ package com.chickencenter.service;
 
 import com.chickencenter.dao.ProductDAO;
 import com.chickencenter.dao.PurchaseDAO;
+import com.chickencenter.dao.SaleItemDAO;
 import com.chickencenter.dao.VendorDAO;
 import com.chickencenter.database.DatabaseConnection;
 import com.chickencenter.model.Product;
@@ -19,11 +20,35 @@ public class ProductService {
     private final ProductDAO productDAO;
     private final PurchaseDAO purchaseDAO;
     private final VendorDAO vendorDAO;
+    private final SaleItemDAO saleItemDAO;
 
     public ProductService() {
         this.productDAO = new ProductDAO();
         this.purchaseDAO = new PurchaseDAO();
         this.vendorDAO = new VendorDAO();
+        this.saleItemDAO = new SaleItemDAO();
+    }
+
+    public int getEffectiveProductId(Product product) {
+        return product.getParentProductId() != null && product.getParentProductId() > 0
+               ? product.getParentProductId() : product.getId();
+    }
+
+    private int getEffectiveProductId(int productId) throws SQLException {
+        Product product = productDAO.findById(productId);
+        if (product == null) return productId;
+        return getEffectiveProductId(product);
+    }
+
+    public double getCurrentBatchBalance(int productId) throws SQLException {
+        Product product = productDAO.findById(productId);
+        if (product == null) return 0;
+        int effectiveId = getEffectiveProductId(product);
+        Product effectiveProduct = effectiveId == productId ? product : productDAO.findById(effectiveId);
+        if (effectiveProduct == null) return 0;
+        int batchId = effectiveProduct.getCurrentBatchId();
+        if (batchId <= 0) return 0;
+        return purchaseDAO.getBalanceQuantity(effectiveId, batchId);
     }
 
     public int createProduct(String productName, String unit, int vendorId, double price) throws SQLException {
@@ -72,11 +97,11 @@ public class ProductService {
     }
 
     public boolean batchExists(int productId, int batchId) throws SQLException {
-        return productDAO.batchExists(productId, batchId);
+        return productDAO.batchExists(getEffectiveProductId(productId), batchId);
     }
 
     public void updateBatch(int productId, int newBatchId) throws SQLException {
-        productDAO.updateBatch(productId, newBatchId);
+        productDAO.updateBatch(getEffectiveProductId(productId), newBatchId);
     }
 
     public List<Product> getAllProducts() throws SQLException {
@@ -100,7 +125,8 @@ public class ProductService {
     }
 
     public void recordSale(int productId, double quantity) throws SQLException {
-        Product product = productDAO.findById(productId);
+        int effectiveId = getEffectiveProductId(productId);
+        Product product = productDAO.findById(effectiveId);
         if (product == null) return;
 
         double newStock = product.getStock() - quantity;
@@ -119,7 +145,8 @@ public class ProductService {
     }
 
     public void addStock(int productId, double quantity) throws SQLException {
-        Product product = productDAO.findById(productId);
+        int effectiveId = getEffectiveProductId(productId);
+        Product product = productDAO.findById(effectiveId);
         if (product == null) return;
 
         if (product.getStock() <= 0 && product.getCurrentBatchId() > 0) {
@@ -144,39 +171,80 @@ public class ProductService {
         System.out.println("Product found - vendorId: " + product.getVendorId());
 
         Purchase purchase = new Purchase(productId, product.getVendorId(), quantity, rate, totalAmount);
+        purchase.setBalanceQuantity(quantity);
         System.out.println("Purchase object created, calling DAO.create");
         
         int purchaseId = purchaseDAO.create(purchase);
         System.out.println("Purchase created with ID: " + purchaseId);
+
+        Purchase created = purchaseDAO.findById(purchaseId);
+        if (created != null && product.getCurrentBatchId() == 0) {
+            product.setCurrentBatchId(created.getItemBatchId());
+            product.setStock(quantity);
+            productDAO.update(product);
+        }
     }
 
     public Product getNextBatch(int productId, int currentBatchId) throws SQLException {
-        Integer nextBatchId = purchaseDAO.getNextBatchId(productId, currentBatchId);
+        int effectiveId = getEffectiveProductId(productId);
+        Integer nextBatchId = purchaseDAO.getNextBatchId(effectiveId, currentBatchId);
         if (nextBatchId != null) {
-            Product product = productDAO.findById(productId);
+            Product product = productDAO.findById(effectiveId);
             product.setCurrentBatchId(nextBatchId);
+            product.setStock(purchaseDAO.getBalanceQuantity(effectiveId, nextBatchId));
             productDAO.update(product);
-            return productDAO.findById(productId);
+            return productDAO.findById(effectiveId);
         }
         return null;
     }
 
     public Product getPrevBatch(int productId, int currentBatchId) throws SQLException {
         if (currentBatchId > 0) {
-            Product product = productDAO.findById(productId);
+            int effectiveId = getEffectiveProductId(productId);
+            Product product = productDAO.findById(effectiveId);
             product.setCurrentBatchId(currentBatchId - 1);
+            product.setStock(purchaseDAO.getBalanceQuantity(effectiveId, currentBatchId - 1));
             productDAO.update(product);
-            return productDAO.findById(productId);
+            return productDAO.findById(effectiveId);
         }
         return null;
     }
 
+    public boolean autoSwitchBatchIfExhausted(int productId) throws SQLException {
+        int effectiveId = getEffectiveProductId(productId);
+        Product product = productDAO.findById(effectiveId);
+        if (product == null) return false;
+        int currentBatchId = product.getCurrentBatchId();
+        if (currentBatchId <= 0) return false;
+        double currentBalance = purchaseDAO.getBalanceQuantity(effectiveId, currentBatchId);
+        if (currentBalance > 0) return false;
+        Integer nextBatchId = purchaseDAO.getNextBatchWithPositiveBalance(effectiveId, currentBatchId);
+        if (nextBatchId != null) {
+            double newBalance = purchaseDAO.getBalanceQuantity(effectiveId, nextBatchId);
+            product.setCurrentBatchId(nextBatchId);
+            product.setStock(newBalance);
+            productDAO.update(product);
+            return true;
+        } else {
+            product.setStock(0);
+            productDAO.update(product);
+            return false;
+        }
+    }
+
     public double getBatchStock(int productId, int batchId) throws SQLException {
-        return purchaseDAO.getBatchStock(productId, batchId);
+        return purchaseDAO.getBatchStock(getEffectiveProductId(productId), batchId);
+    }
+
+    public double getBatchBalanceQuantity(int productId, int batchId) throws SQLException {
+        return purchaseDAO.getBalanceQuantity(getEffectiveProductId(productId), batchId);
     }
     
     public double getTotalAvailableStock(int productId) throws SQLException {
-        return purchaseDAO.getTotalAvailableStock(productId);
+        int effectiveId = getEffectiveProductId(productId);
+        double totalPurchased = purchaseDAO.getTotalPurchasedQuantity(effectiveId);
+        double totalSold = saleItemDAO.getTotalSoldQuantityIncludingChildren(effectiveId);
+        return totalPurchased - totalSold;
     }
 
     public void updatePurchase(int purchaseId, double quantity, double rate, double totalAmount) throws SQLException {

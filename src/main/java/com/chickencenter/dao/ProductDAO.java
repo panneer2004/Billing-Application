@@ -88,6 +88,20 @@ public class ProductDAO {
         }
     }
 
+    public List<Product> findByParentId(int parentId) throws SQLException {
+        List<Product> products = new ArrayList<>();
+        String sql = "SELECT * FROM products WHERE parent_product_id = ? AND COALESCE(is_active, 1) = 1 ORDER BY product_name";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, parentId);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                products.add(mapResultSetToProduct(rs));
+            }
+        }
+        return products;
+    }
+
     public List<Product> findByVendorId(int vendorId) throws SQLException {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT * FROM products WHERE vendor_id = ? ORDER BY product_name";

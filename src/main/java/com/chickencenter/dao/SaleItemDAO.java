@@ -4,6 +4,7 @@ import com.chickencenter.database.DatabaseConnection;
 import com.chickencenter.model.SaleItem;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,6 +60,39 @@ public class SaleItemDAO {
             if (rs.next()) {
                 return rs.getDouble(1);
             }
+        }
+        return 0;
+    }
+
+    public double getTotalSoldQuantityIncludingChildren(int parentId) throws SQLException {
+        String sql = """
+            SELECT COALESCE(SUM(si.quantity), 0)
+            FROM sale_items si
+            JOIN products p ON si.item_id = p.id
+            WHERE p.id = ? OR p.parent_product_id = ?""";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, parentId);
+            pstmt.setInt(2, parentId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) return rs.getDouble(1);
+        }
+        return 0;
+    }
+
+    public double getTotalSoldQuantityForBatchIncludingChildren(int parentId, int batchId) throws SQLException {
+        String sql = """
+            SELECT COALESCE(SUM(si.quantity), 0)
+            FROM sale_items si
+            JOIN products p ON si.item_id = p.id
+            WHERE (p.id = ? OR p.parent_product_id = ?) AND si.batch_id = ?""";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, parentId);
+            pstmt.setInt(2, parentId);
+            pstmt.setInt(3, batchId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) return rs.getDouble(1);
         }
         return 0;
     }
@@ -119,6 +153,86 @@ public class SaleItemDAO {
             pstmt.setInt(1, id);
             pstmt.executeUpdate();
         }
+    }
+
+    public List<Object[]> getItemSales(LocalDate fromDate, LocalDate toDate, Integer productId, Integer batchId) throws SQLException {
+        List<Object[]> result = new ArrayList<>();
+        String sql = "SELECT s.id, p.product_name, si.batch_id, si.quantity, si.price, si.total " +
+                     "FROM sale_items si " +
+                     "JOIN sales s ON s.id = si.sale_id " +
+                     "JOIN products p ON p.id = si.item_id " +
+                     "WHERE DATE(s.created_at) BETWEEN ? AND ? " +
+                     "AND (? IS NULL OR si.item_id = ?) " +
+                     "AND (? IS NULL OR si.batch_id = ?) " +
+                     "ORDER BY s.id DESC, si.id";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, fromDate.toString());
+            pstmt.setString(2, toDate.toString());
+            if (productId != null) {
+                pstmt.setInt(3, productId);
+                pstmt.setInt(4, productId);
+            } else {
+                pstmt.setNull(3, Types.INTEGER);
+                pstmt.setNull(4, Types.INTEGER);
+            }
+            if (batchId != null) {
+                pstmt.setInt(5, batchId);
+                pstmt.setInt(6, batchId);
+            } else {
+                pstmt.setNull(5, Types.INTEGER);
+                pstmt.setNull(6, Types.INTEGER);
+            }
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                result.add(new Object[]{
+                    rs.getInt(1),
+                    rs.getString(2),
+                    rs.getInt(3),
+                    rs.getDouble(4),
+                    rs.getDouble(5),
+                    rs.getDouble(6)
+                });
+            }
+        }
+        return result;
+    }
+
+    public List<Integer> getDistinctBatches(LocalDate fromDate, LocalDate toDate) throws SQLException {
+        List<Integer> batches = new ArrayList<>();
+        String sql = "SELECT DISTINCT si.batch_id FROM sale_items si " +
+                     "JOIN sales s ON s.id = si.sale_id " +
+                     "WHERE DATE(s.created_at) BETWEEN ? AND ? AND si.batch_id IS NOT NULL " +
+                     "ORDER BY si.batch_id";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, fromDate.toString());
+            pstmt.setString(2, toDate.toString());
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                batches.add(rs.getInt(1));
+            }
+        }
+        return batches;
+    }
+
+    public List<Integer> getDistinctBatchesForProduct(int productId, LocalDate fromDate, LocalDate toDate) throws SQLException {
+        List<Integer> batches = new ArrayList<>();
+        String sql = "SELECT DISTINCT si.batch_id FROM sale_items si " +
+                     "JOIN sales s ON s.id = si.sale_id " +
+                     "WHERE si.item_id = ? AND DATE(s.created_at) BETWEEN ? AND ? AND si.batch_id IS NOT NULL " +
+                     "ORDER BY si.batch_id";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, productId);
+            pstmt.setString(2, fromDate.toString());
+            pstmt.setString(3, toDate.toString());
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                batches.add(rs.getInt(1));
+            }
+        }
+        return batches;
     }
 
     public void deleteBySaleId(int saleId) throws SQLException {

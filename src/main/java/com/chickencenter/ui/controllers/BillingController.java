@@ -3,6 +3,11 @@ package com.chickencenter.ui.controllers;
 import com.chickencenter.model.Product;
 import com.chickencenter.model.Sale;
 import com.chickencenter.model.SaleItem;
+import com.chickencenter.model.Account;
+import com.chickencenter.printer.PrinterSettingsManager;
+import com.chickencenter.printer.ReceiptPrintTask;
+import com.chickencenter.printer.ThermalReceiptBuilder;
+import com.chickencenter.service.AccountService;
 import com.chickencenter.service.BillingService;
 import com.chickencenter.service.ProductService;
 import com.chickencenter.util.DropdownUtils;
@@ -19,15 +24,12 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import javafx.util.converter.DoubleStringConverter;
 
-import javax.print.PrintService;
-import javax.print.PrintServiceLookup;
-import java.awt.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 public class BillingController {
     @FXML
@@ -234,6 +236,22 @@ public class BillingController {
                 isUpdating = false;
             }
         });
+
+        txtQuantity.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER) {
+                addToCart();
+            }
+        });
+        txtAmount.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER) {
+                addToCart();
+            }
+        });
+        txtDiscount.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER) {
+                addToCart();
+            }
+        });
     }
 
     private double getEffectivePrice(Product product, double quantity) {
@@ -361,12 +379,6 @@ public class BillingController {
         txtQuantity.requestFocus();
     }
 
-    private void createNewSaleIfNeeded() throws SQLException {
-        if (currentSale == null || currentSale.getId() <= 0) {
-            currentSale = billingService.createSale(LocalDate.now());
-        }
-    }
-
     private void resetForm() {
         currentSale = null;
         cartList.clear();
@@ -400,85 +412,87 @@ public class BillingController {
 
     @FXML
     private void addToCart() {
-        if (selectedProduct == null) {
-            showError("Please select a product");
-            return;
-        }
-        String qtyText = txtQuantity.getText().trim();
-        String amtText = txtAmount.getText().trim();
-        if (qtyText.isEmpty()) {
-            showError("Quantity is required");
-            txtQuantity.requestFocus();
-            return;
-        }
-        if (amtText.isEmpty()) {
-            showError("Amount is required");
-            txtAmount.requestFocus();
-            return;
-        }
-        double quantity;
-        double amount;
+        btnAddToCart.setDisable(true);
         try {
-            quantity = Double.parseDouble(qtyText);
-            amount = Double.parseDouble(amtText);
-            if (quantity <= 0) {
-                showError("Quantity must be greater than zero");
+            if (selectedProduct == null) {
+                showError("Please select a product");
+                return;
+            }
+            String qtyText = txtQuantity.getText().trim();
+            String amtText = txtAmount.getText().trim();
+            if (qtyText.isEmpty()) {
+                showError("Quantity is required");
                 txtQuantity.requestFocus();
                 return;
             }
-            if (amount <= 0) {
-                showError("Amount must be greater than zero");
+            if (amtText.isEmpty()) {
+                showError("Amount is required");
                 txtAmount.requestFocus();
                 return;
             }
-        } catch (NumberFormatException e) {
-            showError("Invalid numeric value in quantity or amount");
-            return;
-        }
-
-        double discount = 0;
-        String discText = txtDiscount.getText().trim();
-        if (!discText.isEmpty()) {
+            double quantity;
+            double amount;
             try {
-                discount = Double.parseDouble(discText);
-                if (discount < 0) {
-                    showError("Discount cannot be negative");
-                    txtDiscount.requestFocus();
+                quantity = Double.parseDouble(qtyText);
+                amount = Double.parseDouble(amtText);
+                if (quantity <= 0) {
+                    showError("Quantity must be greater than zero");
+                    txtQuantity.requestFocus();
                     return;
                 }
-                if (discount > amount) {
-                    showError("Discount cannot exceed item amount");
-                    txtDiscount.requestFocus();
+                if (amount <= 0) {
+                    showError("Amount must be greater than zero");
+                    txtAmount.requestFocus();
                     return;
                 }
             } catch (NumberFormatException e) {
-                showError("Invalid numeric value in discount");
+                showError("Invalid numeric value in quantity or amount");
                 return;
             }
-        }
 
-        try {
-            createNewSaleIfNeeded();
+            double discount = 0;
+            String discText = txtDiscount.getText().trim();
+            if (!discText.isEmpty()) {
+                try {
+                    discount = Double.parseDouble(discText);
+                    if (discount < 0) {
+                        showError("Discount cannot be negative");
+                        txtDiscount.requestFocus();
+                        return;
+                    }
+                    if (discount > amount) {
+                        showError("Discount cannot exceed item amount");
+                        txtDiscount.requestFocus();
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    showError("Invalid numeric value in discount");
+                    return;
+                }
+            }
+
             double effectivePrice = getEffectivePrice(selectedProduct, quantity);
             int batchId = selectedProduct.getCurrentBatchId();
             if (selectedProduct.getParentProductId() != null && selectedProduct.getParentProductId() > 0) {
                 Product parent = productService.getProduct(selectedProduct.getParentProductId());
                 if (parent != null) batchId = parent.getCurrentBatchId();
             }
-            SaleItem saleItem = new SaleItem(currentSale.getId(), selectedProduct.getId(), batchId, quantity, amount, effectivePrice);
+            SaleItem saleItem = new SaleItem(0, selectedProduct.getId(), batchId, quantity, amount, effectivePrice);
             saleItem.setDiscountAmount(discount);
-            int itemId = billingService.addItemToCart(saleItem);
-            saleItem.setId(itemId);
+            saleItem.setId(-(cartList.size() + 1));
             cartList.add(saleItem);
             txtQuantity.clear();
             txtAmount.clear();
             txtDiscount.clear();
             updateTotal();
             handlePaymentModeChange();
+            cmbProduct.requestFocus();
         } catch (IllegalArgumentException e) {
             showError(e.getMessage());
         } catch (SQLException e) {
             showError("Error adding item: " + e.getMessage());
+        } finally {
+            btnAddToCart.setDisable(false);
         }
     }
 
@@ -492,14 +506,7 @@ public class BillingController {
 
     @FXML
     private void clearCart() {
-        try {
-            if (currentSale != null && currentSale.getId() > 0) {
-                billingService.deleteSale(currentSale.getId());
-            }
-            resetForm();
-        } catch (SQLException e) {
-            showError("Error clearing cart: " + e.getMessage());
-        }
+        resetForm();
     }
 
     private void removeItemFromBill(SaleItem item) {
@@ -509,14 +516,9 @@ public class BillingController {
         alert.setContentText("Remove this item from bill?");
         alert.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
-                try {
-                    billingService.removeItemFromSale(item.getId());
-                    cartList.remove(item);
-                    updateTotal();
-                    handlePaymentModeChange();
-                } catch (SQLException e) {
-                    showError("Error removing item: " + e.getMessage());
-                }
+                cartList.remove(item);
+                updateTotal();
+                handlePaymentModeChange();
             }
         });
     }
@@ -524,10 +526,14 @@ public class BillingController {
     @FXML
     private void saveSale() {
         if (!validateBillingForm()) return;
+        double total = calculateCartTotal();
+        if (total <= 0) {
+            showError("Invalid bill amount");
+            return;
+        }
         btnSave.setDisable(true);
         btnSavePrint.setDisable(true);
         try {
-            double total = calculateCartTotal();
             String paymentMode = cmbPaymentMode.getValue();
             double cashAmount = 0, gpayAmount = 0;
             switch (paymentMode) {
@@ -557,11 +563,18 @@ public class BillingController {
                     gpayAmount = total - cashAmount;
                     break;
             }
+
+            currentSale = billingService.createSale(total, LocalDate.now());
+            billingService.saveSaleItems(currentSale.getId(), new ArrayList<>(cartList));
             billingService.completeSaleWithPayment(currentSale.getId(), false, paymentMode, cashAmount, gpayAmount);
             ToastManager.showSuccess("Sale saved successfully!");
             resetForm();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             showError("Error saving sale: " + e.getMessage());
+            if (currentSale != null && currentSale.getId() > 0) {
+                try { billingService.deleteSale(currentSale.getId()); } catch (SQLException ignored) {}
+            }
+            resetForm();
         } finally {
             btnSave.setDisable(false);
             btnSavePrint.setDisable(false);
@@ -572,10 +585,14 @@ public class BillingController {
     private void saveAndPrintSale() {
         if (!validateBillingForm()) return;
         if (!validatePrinter()) return;
+        double total = calculateCartTotal();
+        if (total <= 0) {
+            showError("Invalid bill amount");
+            return;
+        }
         btnSave.setDisable(true);
         btnSavePrint.setDisable(true);
         try {
-            double total = calculateCartTotal();
             String paymentMode = cmbPaymentMode.getValue();
             double cashAmount = 0, gpayAmount = 0;
             switch (paymentMode) {
@@ -605,6 +622,17 @@ public class BillingController {
                     gpayAmount = total - cashAmount;
                     break;
             }
+
+            currentSale = billingService.createSale(total, LocalDate.now());
+            billingService.saveSaleItems(currentSale.getId(), new ArrayList<>(cartList));
+
+            AccountService acctSvc = new AccountService();
+            Account account = acctSvc.getAccount();
+            String shopName = account != null ? account.getShopName() : "JK CHICKEN CENTER";
+            String shopAddress = account != null ? account.getShopAddress() : "";
+            String shopPhone = account != null ? account.getContactNo1() : "";
+
+            java.util.List<SaleItem> dbItems = billingService.getSaleItems(currentSale.getId());
             Sale sale = new Sale();
             sale.setId(currentSale.getId());
             sale.setTotalAmount(total);
@@ -612,14 +640,33 @@ public class BillingController {
             sale.setPaymentMode(paymentMode);
             sale.setCashAmount(cashAmount);
             sale.setGpayAmount(gpayAmount);
-            ObservableList<SaleItem> items = FXCollections.observableArrayList(billingService.getSaleItems(sale.getId()));
-            String receiptHtml = generateHtmlReceipt(sale, items);
-            printHtmlReceipt(receiptHtml);
+            sale.setCreatedAt(LocalDateTime.now());
+
             billingService.completeSaleWithPayment(currentSale.getId(), true, paymentMode, cashAmount, gpayAmount);
+
+            Map<Integer, String> productNames = new HashMap<>();
+            for (Product p : productList) {
+                productNames.put(p.getId(), getProductDisplayName(p));
+            }
+            ThermalReceiptBuilder receiptBuilder = new ThermalReceiptBuilder();
+            byte[] receiptData = receiptBuilder.buildReceipt(sale, dbItems, shopName, shopAddress, shopPhone, productNames);
+
+            PrinterSettingsManager psm = new PrinterSettingsManager();
+            String printerName = psm.getPrinterName();
+            ReceiptPrintTask printTask = new ReceiptPrintTask(receiptData, printerName,
+                msg -> Platform.runLater(() -> ToastManager.showSuccess("Bill sent to printer")),
+                err -> Platform.runLater(() -> showError("Print warning: " + err))
+            );
+            new Thread(printTask).start();
+
             ToastManager.showSuccess("Bill printed and saved successfully!");
             resetForm();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             showError("Error saving sale: " + e.getMessage());
+            if (currentSale != null && currentSale.getId() > 0) {
+                try { billingService.deleteSale(currentSale.getId()); } catch (SQLException ignored) {}
+            }
+            resetForm();
         } finally {
             btnSave.setDisable(false);
             btnSavePrint.setDisable(false);
@@ -639,21 +686,14 @@ public class BillingController {
     }
 
     private boolean validatePrinter() {
-        PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
-        if (services == null || services.length == 0) {
-            showError("Printer not connected");
+        PrinterSettingsManager psm = new PrinterSettingsManager();
+        String printerName = psm.getPrinterName();
+        if (printerName == null || printerName.isEmpty()) {
+            showError("No printer configured. Go to Account Settings to select a printer.");
             return false;
         }
-        boolean found = false;
-        for (PrintService service : services) {
-            String name = service.getName().toLowerCase();
-            if (name.contains("thermal") || name.contains("pos") || name.contains("receipt") || name.contains("80") || name.contains("epson") || name.contains("tm-") || name.contains("printer")) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            showError("Printer unavailable. No thermal printer detected.");
+        if (!psm.isPrinterAvailable(printerName)) {
+            showError("Printer \"" + printerName + "\" is not connected or unavailable.");
             return false;
         }
         return true;
@@ -663,97 +703,7 @@ public class BillingController {
         return cartList.stream().mapToDouble(SaleItem::getTotal).sum();
     }
 
-    private String generateHtmlReceipt(Sale sale, ObservableList<SaleItem> items) {
-        String shopName = "JK CHICKEN CENTER";
-        String shopAddress = "Address Here";
-        String shopPhone = "1234567890";
-        try {
-            com.chickencenter.service.AccountService accountService = new com.chickencenter.service.AccountService();
-            com.chickencenter.model.Account account = accountService.getAccount();
-            if (account != null) {
-                shopName = account.getShopName() != null ? account.getShopName() : shopName;
-                shopAddress = account.getShopAddress() != null ? account.getShopAddress() : shopAddress;
-                if (account.getContactNo1() != null && !account.getContactNo1().isEmpty()) {
-                    shopPhone = account.getContactNo1();
-                }
-            }
-        } catch (Exception e) {
-        }
-        StringBuilder sb = new StringBuilder();
-        sb.append("<!DOCTYPE html><html><head><meta charset=\"UTF-8\">");
-        sb.append("<style>");
-        sb.append("@page { size: 80mm auto; margin: 0; }");
-        sb.append("body { font-family: 'Courier New', monospace; font-size: 12px; margin: 0; padding: 5mm; width: 70mm; }");
-        sb.append(".center { text-align: center; }");
-        sb.append(".right { text-align: right; }");
-        sb.append(".bold { font-weight: bold; }");
-        sb.append(".line { border-top: 1px dashed #000; margin: 5px 0; }");
-        sb.append("table { width: 100%; border-collapse: collapse; }");
-        sb.append("td { padding: 2px 0; vertical-align: top; }");
-        sb.append("</style></head><body>");
-        sb.append("<div class=\"center bold\" style=\"font-size: 16px;\">").append(shopName).append("</div>");
-        sb.append("<div class=\"center\">").append(shopAddress).append("</div>");
-        sb.append("<div class=\"center\">Phone: ").append(shopPhone).append("</div>");
-        sb.append("<div class=\"line\"></div>");
-        sb.append("<table><tr><td>Bill #: </td><td class=\"right bold\">").append(sale.getId()).append("</td></tr>");
-        sb.append("<tr><td>Date: </td><td class=\"right\">").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"))).append("</td></tr>");
-        sb.append("</table>");
-        sb.append("<div class=\"line\"></div>");
-        sb.append("<table><tr><td class=\"bold\">Item</td><td class=\"center\">Qty</td><td class=\"right\">Rate</td><td class=\"right\">Disc</td><td class=\"right\">Amt</td></tr>");
-        double grandTotal = 0;
-        int totalQty = 0;
-        for (SaleItem item : items) {
-            String itemName = getProductName(item.getItemId());
-            double qty = item.getQuantity();
-            double rate = item.getActualPrice();
-            double disc = item.getDiscountAmount();
-            double amt = item.getTotal();
-            sb.append("<tr><td>").append(itemName).append("</td>");
-            sb.append("<td class=\"center\">").append(String.format("%.1f", qty)).append("</td>");
-            sb.append("<td class=\"right\">").append(String.format("%.2f", rate)).append("</td>");
-            sb.append("<td class=\"right\">").append(disc > 0 ? String.format("%.2f", disc) : "-").append("</td>");
-            sb.append("<td class=\"right bold\">").append(String.format("%.2f", amt)).append("</td></tr>");
-            grandTotal += amt;
-            totalQty += qty;
-        }
-        sb.append("</table>");
-        sb.append("<div class=\"line\"></div>");
-        sb.append("<table>");
-        sb.append("<tr><td>Items Count:</td><td class=\"right\">").append(items.size()).append("</td></tr>");
-        sb.append("<tr><td>Total Quantity:</td><td class=\"right\">").append(String.format("%.1f", (double) totalQty)).append("</td></tr>");
-        sb.append("<tr><td class=\"bold\">Sub Total:</td><td class=\"right bold\">").append(String.format("%.2f", grandTotal)).append("</td></tr>");
-        sb.append("</table>");
-        sb.append("<div class=\"line\"></div>");
-        sb.append("<table>");
-        sb.append("<tr><td>Mode of Payment:</td><td class=\"right bold\">").append(sale.getPaymentMode()).append("</td></tr>");
-        if ("Both".equals(sale.getPaymentMode())) {
-            sb.append("<tr><td>Cash Paid:</td><td class=\"right\">Rs. ").append(String.format("%.2f", sale.getCashAmount())).append("</td></tr>");
-            sb.append("<tr><td>GPay Paid:</td><td class=\"right\">Rs. ").append(String.format("%.2f", sale.getGpayAmount())).append("</td></tr>");
-        } else if ("Cash".equals(sale.getPaymentMode())) {
-            sb.append("<tr><td>Cash Paid:</td><td class=\"right\">Rs. ").append(String.format("%.2f", sale.getCashAmount())).append("</td></tr>");
-        } else if ("GPay".equals(sale.getPaymentMode())) {
-            sb.append("<tr><td>GPay Paid:</td><td class=\"right\">Rs. ").append(String.format("%.2f", sale.getGpayAmount())).append("</td></tr>");
-        }
-        sb.append("<tr><td class=\"bold\" style=\"font-size: 14px;\">Grand Total:</td><td class=\"right bold\" style=\"font-size: 14px;\">Rs. ").append(String.format("%.2f", grandTotal)).append("</td></tr>");
-        sb.append("</table>");
-        sb.append("<div class=\"line\"></div>");
-        sb.append("<div class=\"center\" style=\"margin-top: 10px;\">Thank You! Visit Again</div>");
-        sb.append("</body></html>");
-        return sb.toString();
-    }
-
-    private void printHtmlReceipt(String htmlContent) {
-        try {
-            Path tempFile = Files.createTempFile("receipt_", ".html");
-            Files.write(tempFile, htmlContent.getBytes());
-            Desktop desktop = Desktop.getDesktop();
-            desktop.print(tempFile.toFile());
-            Platform.runLater(() -> ToastManager.showSuccess("Bill sent to printer!"));
-            tempFile.toFile().deleteOnExit();
-        } catch (Exception e) {
-            Platform.runLater(() -> showError("Printing failed: " + e.getMessage()));
-        }
-    }
+    // Thermal receipt implemented via ThermalReceiptBuilder + PrinterService
 
     private void updateTotal() {
         double total = cartList.stream().mapToDouble(SaleItem::getTotal).sum();

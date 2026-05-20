@@ -12,7 +12,7 @@
 
     <left>
         <VBox prefWidth="290" styleClass="sidebar">
-            
+
             <VBox alignment="CENTER_LEFT" prefHeight="120" styleClass="sidebar-logo">
                 <Text text="🐔" styleClass="logo-icon"/>
                 <Text text="JK Chicken Center" styleClass="logo-title"/>
@@ -59,6 +59,11 @@
                         </graphic>
                     </Button>
 
+
+                    <Region prefHeight="15"/>
+
+                    <Label text="MANAGEMENT" styleClass="menu-section-label"/>
+
                     <Button fx:id="btnExpenses" onAction="#showExpenses" prefHeight="50" styleClass="nav-item">
                         <graphic>
                             <HBox spacing="14" alignment="CENTER_LEFT">
@@ -67,10 +72,6 @@
                             </HBox>
                         </graphic>
                     </Button>
-
-                    <Region prefHeight="15"/>
-
-                    <Label text="MANAGEMENT" styleClass="menu-section-label"/>
 
                     <Button fx:id="btnPurchase" onAction="#showPurchase" prefHeight="50" styleClass="nav-item">
                         <graphic>
@@ -103,7 +104,8 @@
 
                     <Separator styleClass="sidebar-separator"/>
 
-                    <Button fx:id="btnAccountSettings" onAction="#showAccountSettings" prefHeight="50" styleClass="nav-item">
+                    <Button fx:id="btnAccountSettings" onAction="#showAccountSettings" prefHeight="50"
+                            styleClass="nav-item">
                         <graphic>
                             <HBox spacing="14" alignment="CENTER_LEFT">
                                 <Text text="⚙" styleClass="nav-icon"/>

@@ -157,14 +157,22 @@ public class SaleItemDAO {
 
     public List<Object[]> getItemSales(LocalDate fromDate, LocalDate toDate, Integer productId, Integer batchId) throws SQLException {
         List<Object[]> result = new ArrayList<>();
-        String sql = "SELECT s.id, p.product_name, si.batch_id, si.quantity, si.price, si.total " +
+        String sql = "SELECT s.id, p.product_name, " +
+                     "COALESCE(sbc.batch_id, si.batch_id) AS batch_id, " +
+                     "COALESCE(sbc.consumed_quantity, si.quantity) AS qty, " +
+                     "si.actualprice AS unit_price, " +
+                     "CASE WHEN sbc.consumed_quantity IS NOT NULL " +
+                     "     THEN ROUND(si.discount_amount * sbc.consumed_quantity / NULLIF(si.quantity, 0), 2) " +
+                     "     ELSE si.discount_amount END AS discount, " +
+                     "COALESCE(sbc.consumed_quantity * si.actualprice, si.total) AS amount " +
                      "FROM sale_items si " +
                      "JOIN sales s ON s.id = si.sale_id " +
                      "JOIN products p ON p.id = si.item_id " +
+                     "LEFT JOIN sale_batch_consumption sbc ON sbc.sale_item_id = si.id " +
                      "WHERE DATE(s.created_at) BETWEEN ? AND ? " +
                      "AND (? IS NULL OR si.item_id = ?) " +
-                     "AND (? IS NULL OR si.batch_id = ?) " +
-                     "ORDER BY s.id DESC, si.id";
+                     "AND (? IS NULL OR COALESCE(sbc.batch_id, si.batch_id) = ?) " +
+                     "ORDER BY s.id DESC, si.id, sbc.id";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, fromDate.toString());
@@ -191,7 +199,8 @@ public class SaleItemDAO {
                     rs.getInt(3),
                     rs.getDouble(4),
                     rs.getDouble(5),
-                    rs.getDouble(6)
+                    rs.getDouble(6),
+                    rs.getDouble(7)
                 });
             }
         }
@@ -200,10 +209,13 @@ public class SaleItemDAO {
 
     public List<Integer> getDistinctBatches(LocalDate fromDate, LocalDate toDate) throws SQLException {
         List<Integer> batches = new ArrayList<>();
-        String sql = "SELECT DISTINCT si.batch_id FROM sale_items si " +
+        String sql = "SELECT DISTINCT COALESCE(sbc.batch_id, si.batch_id) AS batch_id " +
+                     "FROM sale_items si " +
                      "JOIN sales s ON s.id = si.sale_id " +
-                     "WHERE DATE(s.created_at) BETWEEN ? AND ? AND si.batch_id IS NOT NULL " +
-                     "ORDER BY si.batch_id";
+                     "LEFT JOIN sale_batch_consumption sbc ON sbc.sale_item_id = si.id " +
+                     "WHERE DATE(s.created_at) BETWEEN ? AND ? " +
+                     "AND COALESCE(sbc.batch_id, si.batch_id) IS NOT NULL " +
+                     "ORDER BY batch_id";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, fromDate.toString());
@@ -218,10 +230,13 @@ public class SaleItemDAO {
 
     public List<Integer> getDistinctBatchesForProduct(int productId, LocalDate fromDate, LocalDate toDate) throws SQLException {
         List<Integer> batches = new ArrayList<>();
-        String sql = "SELECT DISTINCT si.batch_id FROM sale_items si " +
+        String sql = "SELECT DISTINCT COALESCE(sbc.batch_id, si.batch_id) AS batch_id " +
+                     "FROM sale_items si " +
                      "JOIN sales s ON s.id = si.sale_id " +
-                     "WHERE si.item_id = ? AND DATE(s.created_at) BETWEEN ? AND ? AND si.batch_id IS NOT NULL " +
-                     "ORDER BY si.batch_id";
+                     "LEFT JOIN sale_batch_consumption sbc ON sbc.sale_item_id = si.id " +
+                     "WHERE si.item_id = ? AND DATE(s.created_at) BETWEEN ? AND ? " +
+                     "AND COALESCE(sbc.batch_id, si.batch_id) IS NOT NULL " +
+                     "ORDER BY batch_id";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, productId);

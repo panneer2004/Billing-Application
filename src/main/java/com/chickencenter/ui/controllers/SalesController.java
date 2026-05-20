@@ -5,13 +5,17 @@ import com.chickencenter.model.Sale;
 import com.chickencenter.model.SaleItem;
 import com.chickencenter.service.BillingService;
 import com.chickencenter.service.ProductService;
+import com.chickencenter.service.SecurityService;
 import com.chickencenter.util.DropdownUtils;
 import com.chickencenter.util.ToastManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.effect.GaussianBlur;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -45,6 +49,10 @@ public class SalesController {
     @FXML private TableColumn<Sale, LocalDateTime> colDateTime;
     @FXML private TableColumn<Sale, Void> actionCol;
     @FXML private TableColumn<Sale, Void> deleteCol;
+    @FXML private VBox cashCard;
+    @FXML private VBox gpayCard;
+    @FXML private VBox productSummaryCard;
+    @FXML private Button btnDeleteFiltered;
     @FXML private DatePicker dpFromDate;
     @FXML private DatePicker dpToDate;
     @FXML private Label lblTotalCash;
@@ -63,8 +71,11 @@ public class SalesController {
     @FXML private TableColumn<ItemSaleRecord, String> colItemProduct;
     @FXML private TableColumn<ItemSaleRecord, Integer> colItemBatchId;
     @FXML private TableColumn<ItemSaleRecord, Double> colItemQty;
+    @FXML private TableColumn<ItemSaleRecord, Double> colItemPrice;
+    @FXML private TableColumn<ItemSaleRecord, Double> colItemDiscount;
     @FXML private TableColumn<ItemSaleRecord, Double> colItemAmount;
     @FXML private Label lblTotalItemQty;
+    @FXML private Label lblTotalItemDiscount;
     @FXML private Label lblTotalItemAmount;
     @FXML private Label lblItemEmptyState;
 
@@ -73,7 +84,11 @@ public class SalesController {
 
     private final BillingService billingService;
     private final ProductService productService;
+    private final SecurityService securityService;
     private final ObservableList<Sale> salesList;
+    private final javafx.scene.layout.StackPane cashLockOverlay;
+    private final javafx.scene.layout.StackPane gpayLockOverlay;
+    private final javafx.scene.layout.StackPane productSummaryLockOverlay;
     private final ObservableList<Product> productList;
     private final ObservableList<Product> itemProductList;
     private final ObservableList<ItemSaleRecord> itemSaleList;
@@ -81,10 +96,97 @@ public class SalesController {
     public SalesController() {
         this.billingService = new BillingService();
         this.productService = new ProductService();
+        this.securityService = new SecurityService();
         this.salesList = FXCollections.observableArrayList();
         this.productList = FXCollections.observableArrayList();
         this.itemProductList = FXCollections.observableArrayList();
         this.itemSaleList = FXCollections.observableArrayList();
+        this.cashLockOverlay = createLockOverlay();
+        this.gpayLockOverlay = createLockOverlay();
+        this.productSummaryLockOverlay = createLockOverlay();
+    }
+
+    private StackPane createLockOverlay() {
+
+        StackPane overlay = new StackPane();
+
+        overlay.setPickOnBounds(true);
+
+        overlay.setStyle(
+                "-fx-background-color: rgba(255,255,255,0.22);" +
+                        "-fx-background-radius: 16;" +
+                        "-fx-border-radius: 16;"
+        );
+
+        // glass effect
+        overlay.setEffect(new GaussianBlur(6));
+
+        VBox lockBox = new VBox();
+        lockBox.setAlignment(Pos.CENTER);
+
+        Label icon = new Label("🔒");
+
+        icon.setStyle(
+                "-fx-font-size: 34px;" +
+                        "-fx-text-fill: rgba(255,255,255,0.95);"
+        );
+
+        lockBox.getChildren().add(icon);
+
+        overlay.getChildren().add(lockBox);
+
+        StackPane.setAlignment(lockBox, Pos.CENTER);
+
+        overlay.setVisible(false);
+        overlay.setManaged(false);
+
+        return overlay;
+    }
+
+    private void wrapWithOverlay(VBox card, StackPane overlay) {
+        AnchorPane wrapper = new AnchorPane();
+        javafx.scene.layout.Pane parent = (javafx.scene.layout.Pane) card.getParent();
+        int idx = parent.getChildren().indexOf(card);
+        parent.getChildren().remove(card);
+        javafx.scene.shape.Rectangle clip = new javafx.scene.shape.Rectangle();
+        clip.setArcWidth(16);
+        clip.setArcHeight(16);
+        clip.widthProperty().bind(card.widthProperty());
+        clip.heightProperty().bind(card.heightProperty());
+        card.setClip(clip);
+        wrapper.getChildren().addAll(card, overlay);
+        AnchorPane.setTopAnchor(card, 0.0);
+        AnchorPane.setBottomAnchor(card, 0.0);
+        AnchorPane.setLeftAnchor(card, 0.0);
+        AnchorPane.setRightAnchor(card, 0.0);
+        AnchorPane.setTopAnchor(overlay, 0.0);
+        AnchorPane.setBottomAnchor(overlay, 0.0);
+        AnchorPane.setLeftAnchor(overlay, 0.0);
+        AnchorPane.setRightAnchor(overlay, 0.0);
+        parent.getChildren().add(idx, wrapper);
+        if (parent instanceof HBox) {
+            HBox.setHgrow(wrapper, javafx.scene.layout.Priority.ALWAYS);
+        }
+    }
+
+    private void updateSecurityLockUI() {
+
+        boolean locked = SecurityService.lockEnabledProperty().get();
+
+        GaussianBlur blur = locked ? new GaussianBlur(12) : null;
+
+        cashCard.setEffect(blur);
+        gpayCard.setEffect(blur);
+        productSummaryCard.setEffect(blur);
+
+        cashLockOverlay.setVisible(locked);
+        cashLockOverlay.setManaged(locked);
+
+        gpayLockOverlay.setVisible(locked);
+        gpayLockOverlay.setManaged(locked);
+
+        productSummaryLockOverlay.setVisible(locked);
+        productSummaryLockOverlay.setManaged(locked);
     }
 
     public static class ItemSaleRecord {
@@ -93,14 +195,16 @@ public class SalesController {
         private final int batchId;
         private final double quantity;
         private final double price;
+        private final double discount;
         private final double amount;
 
-        public ItemSaleRecord(int billNo, String productName, int batchId, double quantity, double price, double amount) {
+        public ItemSaleRecord(int billNo, String productName, int batchId, double quantity, double price, double discount, double amount) {
             this.billNo = billNo;
             this.productName = productName != null ? productName : "";
             this.batchId = batchId;
             this.quantity = quantity;
             this.price = price;
+            this.discount = discount;
             this.amount = amount;
         }
 
@@ -109,11 +213,23 @@ public class SalesController {
         public int getBatchId() { return batchId; }
         public double getQuantity() { return quantity; }
         public double getPrice() { return price; }
+        public double getDiscount() { return discount; }
         public double getAmount() { return amount; }
     }
 
     @FXML
     private void initialize() {
+        SecurityService.refreshLockState();
+        SecurityService.lockEnabledProperty().addListener((obs, ov, nv) -> {
+            Platform.runLater(this::updateSecurityLockUI);
+        });
+
+        wrapWithOverlay(cashCard, cashLockOverlay);
+        wrapWithOverlay(gpayCard, gpayLockOverlay);
+        wrapWithOverlay(productSummaryCard, productSummaryLockOverlay);
+
+        updateSecurityLockUI();
+
         tblSales.setItems(null);
         tblSales.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         salesList.clear();
@@ -149,6 +265,8 @@ public class SalesController {
         loadItemSales();
 
         showSaleView();
+
+        Platform.runLater(this::updateSecurityLockUI);
     }
 
     @FXML
@@ -312,7 +430,11 @@ public class SalesController {
             private final StackPane stackPane = new StackPane();
             private final Button delBtn = new Button("Delete");
             {
-                delBtn.setStyle("-fx-text-fill: #ef4444; -fx-font-weight: bold; -fx-font-size: 12; -fx-cursor: hand;");
+                boolean locked = securityService.isDeleteLockEnabled();
+                delBtn.setDisable(locked);
+                delBtn.setStyle(locked
+                    ? "-fx-text-fill: #9ca3af; -fx-font-weight: bold; -fx-font-size: 12; -fx-cursor: default;"
+                    : "-fx-text-fill: #ef4444; -fx-font-weight: bold; -fx-font-size: 12; -fx-cursor: hand;");
                 StackPane.setAlignment(delBtn, Pos.CENTER);
                 stackPane.getChildren().add(delBtn);
                 delBtn.setOnAction(e -> {
@@ -385,6 +507,29 @@ public class SalesController {
                     String display = item % 1 == 0 ? String.valueOf((int) item.doubleValue()) : String.format("%.2f", item);
                     setText(display);
                 }
+                setStyle("-fx-alignment: CENTER; -fx-font-size: 12;");
+            }
+        });
+
+        colItemPrice.setCellValueFactory(new PropertyValueFactory<>("price"));
+        colItemPrice.setCellFactory(col -> new TableCell<ItemSaleRecord, Double>() {
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) { setText(null); }
+                else { setText("Rs. " + String.format("%.2f", item)); }
+                setStyle("-fx-alignment: CENTER; -fx-font-size: 12;");
+            }
+        });
+
+        colItemDiscount.setCellValueFactory(new PropertyValueFactory<>("discount"));
+        colItemDiscount.setCellFactory(col -> new TableCell<ItemSaleRecord, Double>() {
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null || item == 0) { setText(null); }
+                else if (item % 1 == 0) { setText("Rs. " + String.valueOf((int) item.doubleValue())); }
+                else { setText("Rs. " + String.format("%.2f", item)); }
                 setStyle("-fx-alignment: CENTER; -fx-font-size: 12;");
             }
         });
@@ -518,6 +663,7 @@ public class SalesController {
             List<Object[]> rows = billingService.getItemSales(fromDate, toDate, productId, selectedBatch);
             itemSaleList.clear();
             double totalQty = 0;
+            double totalDiscount = 0;
             double totalAmount = 0;
             for (Object[] row : rows) {
                 int billNo = (int) row[0];
@@ -525,9 +671,11 @@ public class SalesController {
                 int batchId = row[2] != null ? (int) row[2] : 0;
                 double qty = (double) row[3];
                 double price = (double) row[4];
-                double amount = (double) row[5];
-                itemSaleList.add(new ItemSaleRecord(billNo, prodName, batchId, qty, price, amount));
+                double discount = row[5] != null ? (double) row[5] : 0;
+                double amount = (double) row[6];
+                itemSaleList.add(new ItemSaleRecord(billNo, prodName, batchId, qty, price, discount, amount));
                 totalQty += qty;
+                totalDiscount += discount;
                 totalAmount += amount;
             }
             boolean hasData = !rows.isEmpty();
@@ -539,6 +687,8 @@ public class SalesController {
 
             String qtyDisplay = totalQty % 1 == 0 ? String.valueOf((int) totalQty) : String.format("%.2f", totalQty);
             lblTotalItemQty.setText(qtyDisplay);
+            boolean discountHasDecimals = totalDiscount % 1 != 0;
+            lblTotalItemDiscount.setText((discountHasDecimals ? String.format("%.2f", totalDiscount) : String.valueOf((int) totalDiscount)));
             lblTotalItemAmount.setText("Rs. " + String.format("%.2f", totalAmount));
         } catch (SQLException e) {
             showError("Error loading item sales: " + e.getMessage());
@@ -562,7 +712,15 @@ public class SalesController {
             salesList.addAll(sales);
             tblSales.setItems(salesList);
             tblSales.refresh();
+            boolean locked = securityService.isDeleteLockEnabled();
+            btnDeleteFiltered.setDisable(locked);
+            if (locked) {
+                btnDeleteFiltered.setStyle("-fx-background-color: #d1d5db; -fx-text-fill: #9ca3af; -fx-background-radius: 5; -fx-font-size: 11; -fx-font-weight: bold; -fx-cursor: default;");
+            } else {
+                btnDeleteFiltered.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 11; -fx-font-weight: bold; -fx-cursor: hand;");
+            }
             updateSummaries();
+            updateSecurityLockUI();
         } catch (SQLException e) {
             showError("Error filtering sales: " + e.getMessage());
         }
@@ -637,6 +795,10 @@ public class SalesController {
 
     private void deleteSale(Sale sale) {
         if (sale == null) return;
+        if (securityService.isDeleteLockEnabled()) {
+            showError("Delete is locked. Disable security lock in Account Settings to proceed.");
+            return;
+        }
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Confirm Delete");
         confirm.setHeaderText("Delete Sale #" + sale.getId());
@@ -654,6 +816,10 @@ public class SalesController {
 
     @FXML
     private void deleteFilteredSales() {
+        if (securityService.isDeleteLockEnabled()) {
+            showError("Delete is locked. Disable security lock in Account Settings to proceed.");
+            return;
+        }
         if (salesList.isEmpty()) {
             showError("No sales to delete");
             return;

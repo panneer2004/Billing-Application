@@ -1,12 +1,19 @@
 package com.chickencenter.ui.controllers;
 
 import com.chickencenter.model.Account;
+import com.chickencenter.printer.PrinterSettingsManager;
+import com.chickencenter.printer.ReceiptPrintTask;
+import com.chickencenter.printer.ThermalReceiptBuilder;
 import com.chickencenter.service.AccountService;
+import com.chickencenter.service.SecurityService;
 import com.chickencenter.util.ToastManager;
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -43,6 +50,11 @@ public class AccountSettingsController {
     @FXML private Button btnEditContactNo2;
     @FXML private Button btnEditContactNo3;
 
+    @FXML private ComboBox<String> cmbPrinter;
+    @FXML private Button btnRefreshPrinters;
+    @FXML private Button btnTestPrint;
+    @FXML private Label lblPrinterStatus;
+
     @FXML private HBox boxShopNameActions;
     @FXML private HBox boxShopAddressActions;
     @FXML private HBox boxContactNo1Actions;
@@ -50,6 +62,7 @@ public class AccountSettingsController {
     @FXML private HBox boxContactNo3Actions;
 
     private final AccountService accountService;
+    private final PrinterSettingsManager printerSettingsManager;
     private Account currentAccount;
     private String originalShopName;
     private String originalShopAddress;
@@ -59,6 +72,7 @@ public class AccountSettingsController {
 
     public AccountSettingsController() {
         this.accountService = new AccountService();
+        this.printerSettingsManager = new PrinterSettingsManager();
     }
 
     @FXML
@@ -97,6 +111,14 @@ public class AccountSettingsController {
                 }
             }
         });
+
+        initializePrinterSection();
+    }
+
+    private void initializePrinterSection() {
+        cmbPrinter.setItems(FXCollections.observableArrayList());
+        refreshPrinters();
+        cmbPrinter.setOnAction(e -> onPrinterSelected());
     }
 
     private void loadAccount() {
@@ -138,6 +160,10 @@ public class AccountSettingsController {
                 }
 
                 updateSecurityUI(currentAccount.isLocked());
+                String savedPrinter = currentAccount.getPrinterName();
+                if (savedPrinter != null && !savedPrinter.isEmpty()) {
+                    cmbPrinter.getSelectionModel().select(savedPrinter);
+                }
             }
         } catch (SQLException e) {
             showError("Error loading account: " + e.getMessage());
@@ -185,6 +211,7 @@ public class AccountSettingsController {
                 accountService.updateAccount(currentAccount);
 
                 loadAccount();
+                SecurityService.refreshLockState();
             } catch (SQLException e) {
                 showError("Error saving password: " + e.getMessage());
             }
@@ -341,6 +368,7 @@ public class AccountSettingsController {
 
                 loadAccount();
                 ToastManager.showSuccess("Security lock has been enabled!");
+                SecurityService.refreshLockState();
                 return;
             } else {
                 Dialog<String> dialog = new Dialog<>();
@@ -400,6 +428,7 @@ public class AccountSettingsController {
 
                 loadAccount();
                 ToastManager.showSuccess("Security lock has been disabled!");
+                SecurityService.refreshLockState();
                 return;
             }
         } catch (SQLException e) {
@@ -561,6 +590,64 @@ public class AccountSettingsController {
             ToastManager.showSuccess("Updated successfully!");
         } catch (SQLException e) {
             showError("Error: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void refreshPrinters() {
+        String currentSelection = cmbPrinter.getSelectionModel().getSelectedItem();
+        cmbPrinter.getItems().clear();
+        java.util.List<String> printers = printerSettingsManager.getAvailablePrinters();
+        if (printers.isEmpty()) {
+            cmbPrinter.getItems().add("No printers found");
+            cmbPrinter.getSelectionModel().select(0);
+            lblPrinterStatus.setText("No printers detected");
+            lblPrinterStatus.setStyle("-fx-text-fill: #dc2626;");
+            btnTestPrint.setDisable(true);
+            return;
+        }
+        cmbPrinter.getItems().addAll(printers);
+        if (currentSelection != null && printers.contains(currentSelection)) {
+            cmbPrinter.getSelectionModel().select(currentSelection);
+        } else {
+            String saved = printerSettingsManager.getPrinterName();
+            if (saved != null && printers.contains(saved)) {
+                cmbPrinter.getSelectionModel().select(saved);
+            }
+        }
+        lblPrinterStatus.setText(printers.size() + " printer(s) available");
+        lblPrinterStatus.setStyle("-fx-text-fill: #10b981;");
+        btnTestPrint.setDisable(false);
+    }
+
+    private void onPrinterSelected() {
+        String selected = cmbPrinter.getSelectionModel().getSelectedItem();
+        if (selected != null && !selected.isEmpty() && !"No printers found".equals(selected)) {
+            printerSettingsManager.savePrinterName(selected);
+            if (currentAccount != null) {
+                currentAccount.setPrinterName(selected);
+            }
+        }
+    }
+
+    @FXML
+    private void testPrint() {
+        String printerName = cmbPrinter.getSelectionModel().getSelectedItem();
+        if (printerName == null || printerName.isEmpty() || "No printers found".equals(printerName)) {
+            showError("Select a printer first");
+            return;
+        }
+        try {
+            String shopName = currentAccount != null ? currentAccount.getShopName() : "JK CHICKEN CENTER";
+            ThermalReceiptBuilder builder = new ThermalReceiptBuilder();
+            byte[] testData = builder.buildTestReceipt(shopName);
+            ReceiptPrintTask task = new ReceiptPrintTask(testData, printerName,
+                msg -> Platform.runLater(() -> ToastManager.showSuccess("Test print sent successfully!")),
+                err -> Platform.runLater(() -> showError("Test print failed: " + err))
+            );
+            new Thread(task).start();
+        } catch (Exception e) {
+            showError("Failed to generate test receipt: " + e.getMessage());
         }
     }
 

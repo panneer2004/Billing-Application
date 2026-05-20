@@ -217,6 +217,7 @@ public class DatabaseInitializer {
             addColumnIfNotExists(stmt, "account", "contact_no3", "TEXT");
             addColumnIfNotExists(stmt, "account", "password", "TEXT");
             addColumnIfNotExists(stmt, "account", "is_locked", "INTEGER DEFAULT 0");
+            addColumnIfNotExists(stmt, "account", "printer_name", "TEXT");
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS sale_batch_consumption (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -42,11 +42,24 @@ public class BillingService {
                ? product.getParentProductId() : product.getId();
     }
 
-    public Sale createSale(LocalDate saleDate) throws SQLException {
+    public Sale createSale(double totalAmount, LocalDate saleDate) throws SQLException {
         Sale sale = new Sale(saleDate);
+        sale.setTotalAmount(totalAmount);
         int saleId = saleDAO.create(sale);
         sale.setId(saleId);
         return sale;
+    }
+
+    public void saveSaleItems(int saleId, List<SaleItem> items) throws SQLException {
+        for (SaleItem item : items) {
+            item.setSaleId(saleId);
+            double availableStock = getAvailableStock(item.getItemId());
+            if (availableStock < item.getQuantity()) {
+                throw new IllegalArgumentException("Insufficient stock for item. Available: " + availableStock);
+            }
+            int itemId = saleItemDAO.create(item);
+            item.setId(itemId);
+        }
     }
 
     public int addItemToCart(SaleItem saleItem) throws SQLException {

@@ -22,6 +22,7 @@ public class AccountDAO {
                 account.setContactNo3(rs.getString("contact_no3"));
                 account.setPassword(rs.getString("password"));
                 account.setLocked(rs.getInt("is_locked") == 1);
+                account.setPrinterName(rs.getString("printer_name"));
                 account.setCreatedAt(rs.getString("created_at"));
                 account.setLastModifiedAt(rs.getString("last_modified_at"));
                 return account;
@@ -31,7 +32,7 @@ public class AccountDAO {
     }
 
     public void updateAccount(Account account) throws SQLException {
-        String sql = "UPDATE account SET shop_name = ?, shop_address = ?, contact_no1 = ?, contact_no2 = ?, contact_no3 = ?, password = ?, is_locked = ?, last_modified_at = ? WHERE id = (SELECT id FROM account LIMIT 1)";
+        String sql = "UPDATE account SET shop_name = ?, shop_address = ?, contact_no1 = ?, contact_no2 = ?, contact_no3 = ?, password = ?, is_locked = ?, printer_name = ?, last_modified_at = ? WHERE id = (SELECT id FROM account LIMIT 1)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, account.getShopName() != null ? account.getShopName().trim() : "");
@@ -41,7 +42,8 @@ public class AccountDAO {
             pstmt.setString(5, account.getContactNo3() != null ? account.getContactNo3().trim() : "");
             pstmt.setString(6, account.getPassword() != null ? account.getPassword().trim() : "");
             pstmt.setInt(7, account.isLocked() ? 1 : 0);
-            pstmt.setString(8, LocalDateTime.now().toString());
+            pstmt.setString(8, account.getPrinterName() != null ? account.getPrinterName().trim() : "");
+            pstmt.setString(9, LocalDateTime.now().toString());
             pstmt.executeUpdate();
         }
     }

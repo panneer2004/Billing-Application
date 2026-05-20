@@ -3,6 +3,7 @@ package com.chickencenter.ui.controllers;
 import com.chickencenter.model.Product;
 import com.chickencenter.model.Vendor;
 import com.chickencenter.service.ProductService;
+import com.chickencenter.service.SecurityService;
 import com.chickencenter.util.DropdownUtils;
 import com.chickencenter.util.ToastManager;
 import javafx.collections.FXCollections;
@@ -62,6 +63,7 @@ public class ProductsController {
     @FXML
     private Button btnClear;
     private final ProductService productService;
+    private final SecurityService securityService;
     private final ObservableList<Product> productList;
     private final ObservableList<Vendor> vendorList;
     private Product selectedProduct;
@@ -69,6 +71,7 @@ public class ProductsController {
 
     public ProductsController() {
         this.productService = new ProductService();
+        this.securityService = new SecurityService();
         this.productList = FXCollections.observableArrayList();
         this.vendorList = FXCollections.observableArrayList();
     }
@@ -289,8 +292,12 @@ public class ProductsController {
             private final Button btnDelete = new Button("Delete");
 
             {
+                boolean locked = securityService.isDeleteLockEnabled();
                 btnEdit.setStyle("-fx-text-fill: #2563EB; -fx-font-weight: bold; -fx-cursor: hand;");
-                btnDelete.setStyle("-fx-text-fill: #ef4444; -fx-font-weight: bold; -fx-cursor: hand;");
+                btnDelete.setDisable(locked);
+                btnDelete.setStyle(locked
+                    ? "-fx-text-fill: #9ca3af; -fx-font-weight: bold; -fx-cursor: default;"
+                    : "-fx-text-fill: #ef4444; -fx-font-weight: bold; -fx-cursor: hand;");
                 hbox.setAlignment(Pos.CENTER);
                 hbox.getChildren().addAll(btnEdit, btnDelete);
                 btnEdit.setOnAction(e -> {
@@ -634,6 +641,10 @@ public class ProductsController {
     }
 
     private void deleteProduct(Product product) {
+        if (securityService.isDeleteLockEnabled()) {
+            showError("Delete is locked. Disable security lock in Account Settings to proceed.");
+            return;
+        }
         try {
             if (productService.hasChildren(product.getId())) {
                 showError("Cannot delete parent product with existing sub products. Remove sub products first.");

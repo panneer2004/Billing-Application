@@ -31,9 +31,19 @@ $env:Path += ";$env:JAVA_HOME\bin"
 cd "C:\Users\acer\OneDrive\Desktop\Jk-Chicken-Center"
 
 jpackage `
---input "C:\Users\acer\OneDrive\Desktop\Jk-Chicken-Center\out\artifacts\jk_chicken_center_jar" `
+--input "C:\Users\acer\OneDrive\Desktop\Jk-Chicken-Center\target" `
 --name "JK-Chicken-Center" `
---main-jar "jk-chicken-center.jar" `
+--main-jar "jk-chicken-center-1.0.0.jar" `
+--main-class "com.chickencenter.MainApp" `
+--type app-image `
+--runtime-image runtime `
+--add-modules java.desktop
+
+#Additional updated .exe
+jpackage `
+--input "target" `
+--name "JK-Chicken-Center" `
+--main-jar "jk-chicken-center-1.0.0.jar" `
 --main-class "com.chickencenter.MainApp" `
 --type app-image `
 --runtime-image runtime

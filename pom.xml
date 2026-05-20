@@ -85,6 +85,73 @@
                     <mainClass>com.chickencenter/com.chickencenter.MainApp</mainClass>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.chickencenter.Main</mainClass>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jlink-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <addModules>java.desktop,jdk.crypto.ec,java.logging,java.xml,java.sql,java.naming</addModules>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.panteleyev</groupId>
+                <artifactId>jpackage-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <configuration>
+                    <name>JK Chicken Center</name>
+                    <appVersion>1.0.0</appVersion>
+                    <vendor>JK Chicken Center</vendor>
+                    <input>${project.build.directory}</input>
+                    <mainJar>${project.build.finalName}.jar</mainJar>
+                    <modulePath>${java.home}/jmods</modulePath>
+                    <javaOptions>
+                        <option>--add-modules=java.desktop</option>
+                    </javaOptions>
+                    <icon>src/main/resources/icon.ico</icon>
+                    <windows>
+                        <winConsole>false</winConsole>
+                        <winDirChooser>true</winDirChooser>
+                        <winShortcut>true</winShortcut>
+                        <winMenu>true</winMenu>
+                        <winMenuGroup>JK Chicken Center</winMenuGroup>
+                    </windows>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>

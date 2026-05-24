@@ -28,6 +28,7 @@ public class BillingService {
     private final PriceDAO priceDAO;
     private final ProductDAO productDAO;
     private final PurchaseDAO purchaseDAO;
+    private final StockService stockService;
 
     public BillingService() {
         this.saleDAO = new SaleDAO();
@@ -35,6 +36,7 @@ public class BillingService {
         this.priceDAO = new PriceDAO();
         this.productDAO = new ProductDAO();
         this.purchaseDAO = new PurchaseDAO();
+        this.stockService = new StockService();
     }
 
     private int getEffectiveProductId(Product product) {
@@ -53,7 +55,7 @@ public class BillingService {
     public void saveSaleItems(int saleId, List<SaleItem> items) throws SQLException {
         for (SaleItem item : items) {
             item.setSaleId(saleId);
-            double availableStock = getAvailableStock(item.getItemId());
+            double availableStock = stockService.getAvailableStock(item.getItemId(), item.getBatchId() != null ? item.getBatchId() : 0);
             if (availableStock < item.getQuantity()) {
                 throw new IllegalArgumentException("Insufficient stock for item. Available: " + availableStock);
             }
@@ -63,7 +65,7 @@ public class BillingService {
     }
 
     public int addItemToCart(SaleItem saleItem) throws SQLException {
-        double availableStock = getAvailableStock(saleItem.getItemId());
+        double availableStock = stockService.getAvailableStock(saleItem.getItemId(), saleItem.getBatchId() != null ? saleItem.getBatchId() : 0);
         if (availableStock < saleItem.getQuantity()) {
             throw new IllegalArgumentException("Insufficient stock. Available: " + availableStock);
         }

@@ -4,6 +4,7 @@ import com.chickencenter.model.Product;
 import com.chickencenter.model.Vendor;
 import com.chickencenter.service.ProductService;
 import com.chickencenter.service.SecurityService;
+import com.chickencenter.service.StockService;
 import com.chickencenter.util.DropdownUtils;
 import com.chickencenter.util.TableUtils;
 import com.chickencenter.util.ToastManager;
@@ -65,6 +66,7 @@ public class ProductsController {
     private Button btnClear;
     private final ProductService productService;
     private final SecurityService securityService;
+    private final StockService stockService;
     private final ObservableList<Product> productList;
     private final ObservableList<Vendor> vendorList;
     private Product selectedProduct;
@@ -73,6 +75,7 @@ public class ProductsController {
     public ProductsController() {
         this.productService = new ProductService();
         this.securityService = new SecurityService();
+        this.stockService = new StockService();
         this.productList = FXCollections.observableArrayList();
         this.vendorList = FXCollections.observableArrayList();
     }
@@ -441,7 +444,7 @@ public class ProductsController {
                         product.setCurrentBatchId(parent.getCurrentBatchId());
                     }
                 }
-                double balance = productService.getCurrentBatchBalance(product.getId());
+                double balance = stockService.getAvailableStock(product.getId(), product.getCurrentBatchId());
                 product.setStock(balance);
             }
         } catch (SQLException e) {

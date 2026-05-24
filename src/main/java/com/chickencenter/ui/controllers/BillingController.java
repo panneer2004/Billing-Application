@@ -10,6 +10,7 @@ import com.chickencenter.printer.ThermalReceiptBuilder;
 import com.chickencenter.service.AccountService;
 import com.chickencenter.service.BillingService;
 import com.chickencenter.service.ProductService;
+import com.chickencenter.service.StockService;
 import com.chickencenter.util.DropdownUtils;
 import com.chickencenter.util.TableUtils;
 import com.chickencenter.util.ToastManager;
@@ -21,6 +22,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import javafx.util.converter.DoubleStringConverter;
@@ -82,6 +84,7 @@ public class BillingController {
 
     private final BillingService billingService;
     private final ProductService productService;
+    private final StockService stockService;
     private final ObservableList<SaleItem> cartList;
     private final ObservableList<Product> productList;
     private Sale currentSale;
@@ -93,6 +96,7 @@ public class BillingController {
     public BillingController() {
         this.billingService = new BillingService();
         this.productService = new ProductService();
+        this.stockService = new StockService();
         this.cartList = FXCollections.observableArrayList();
         this.productList = FXCollections.observableArrayList();
     }
@@ -160,12 +164,52 @@ public class BillingController {
     private void setupCartTable() {
         tblCart.setSelectionModel(null);
         tblCart.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblCart.setEditable(true);
         TableUtils.addSerialNumberColumn(tblCart, 0);
         colCartItem.setCellValueFactory(cellData -> {
             String itemName = getProductName(cellData.getValue().getItemId());
             return new javafx.beans.property.SimpleStringProperty(itemName);
         });
         colCartQty.setCellValueFactory(cellData -> new javafx.beans.property.SimpleDoubleProperty(cellData.getValue().getQuantity()).asObject());
+        colCartQty.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+        colCartQty.setOnEditCommit(event -> {
+            SaleItem editedItem = event.getRowValue();
+            double newQty = event.getNewValue();
+            if (newQty <= 0) {
+                showError("Quantity must be greater than zero");
+                tblCart.refresh();
+                return;
+            }
+            try {
+                Product product = findProductById(editedItem.getItemId());
+                if (product != null) {
+                    int editBatchId = product.getCurrentBatchId();
+                    if (product.getParentProductId() != null && product.getParentProductId() > 0) {
+                        Product parent = productService.getProduct(product.getParentProductId());
+                        if (parent != null) editBatchId = parent.getCurrentBatchId();
+                    }
+                    double dbStock = stockService.getAvailableStock(product.getId(), editBatchId);
+                    double cartQty = getCartQuantityForProduct(product);
+                    double cartQtyExcludingEdited = cartQty - editedItem.getQuantity();
+                    double remainingStock = dbStock - cartQtyExcludingEdited;
+                    System.out.println("[StockCheck-Edit] Product: " + getProductDisplayName(product) + " | ID: " + product.getId() + " | BatchID: " + editBatchId + " | DB Stock: " + dbStock + " | Cart Qty (excl edited): " + cartQtyExcludingEdited + " | New Qty: " + newQty + " | Available: " + remainingStock);
+                    if (newQty > remainingStock) {
+                        String unit = product.getUnit();
+                        String unitDisplay = unit != null && !unit.isEmpty() ? " " + unit : "";
+                        showError("Insufficient stock for:\n" + getProductDisplayName(product) + "\n\nAvailable Stock: " + String.format("%.2f", remainingStock) + unitDisplay);
+                        tblCart.refresh();
+                        return;
+                    }
+                }
+                editedItem.setQuantity(newQty);
+                editedItem.setTotal(newQty * editedItem.getPrice());
+                updateTotal();
+                handlePaymentModeChange();
+            } catch (SQLException e) {
+                showError("Error validating stock: " + e.getMessage());
+                tblCart.refresh();
+            }
+        });
         colCartPrice.setCellValueFactory(cellData -> new javafx.beans.property.SimpleDoubleProperty(cellData.getValue().getPrice()).asObject());
         colCartDiscount.setCellValueFactory(cellData -> {
             double disc = cellData.getValue().getDiscountAmount();
@@ -473,12 +517,25 @@ public class BillingController {
                 }
             }
 
-            double effectivePrice = getEffectivePrice(selectedProduct, quantity);
             int batchId = selectedProduct.getCurrentBatchId();
             if (selectedProduct.getParentProductId() != null && selectedProduct.getParentProductId() > 0) {
                 Product parent = productService.getProduct(selectedProduct.getParentProductId());
                 if (parent != null) batchId = parent.getCurrentBatchId();
             }
+
+            double dbStock = stockService.getAvailableStock(selectedProduct.getId(), batchId);
+            double cartQty = getCartQuantityForProduct(selectedProduct);
+            double remainingStock = dbStock - cartQty;
+            System.out.println("[StockCheck] Product: " + getProductDisplayName(selectedProduct) + " | ID: " + selectedProduct.getId() + " | BatchID: " + batchId + " | DB Stock: " + dbStock + " | Cart Qty: " + cartQty + " | Requested: " + quantity + " | Available: " + remainingStock);
+            if (quantity > remainingStock) {
+                String unit = selectedProduct.getUnit();
+                String unitDisplay = unit != null && !unit.isEmpty() ? " " + unit : "";
+                showError("Insufficient stock for:\n" + getProductDisplayName(selectedProduct) + "\n\nAvailable Stock: " + String.format("%.2f", remainingStock) + unitDisplay);
+                txtQuantity.requestFocus();
+                return;
+            }
+
+            double effectivePrice = getEffectivePrice(selectedProduct, quantity);
             SaleItem saleItem = new SaleItem(0, selectedProduct.getId(), batchId, quantity, amount, effectivePrice);
             saleItem.setDiscountAmount(discount);
             saleItem.setId(-(cartList.size() + 1));
@@ -710,6 +767,32 @@ public class BillingController {
     private void updateTotal() {
         double total = cartList.stream().mapToDouble(SaleItem::getTotal).sum();
         lblTotalAmount.setText("Rs." + String.format("%.2f", total));
+    }
+
+    private double getCartQuantityForProduct(Product product) {
+        int effectiveId = product.getParentProductId() != null && product.getParentProductId() > 0
+            ? product.getParentProductId() : product.getId();
+        double qty = 0;
+        for (SaleItem item : cartList) {
+            for (Product p : productList) {
+                if (p.getId() == item.getItemId()) {
+                    int cartEffectiveId = p.getParentProductId() != null && p.getParentProductId() > 0
+                        ? p.getParentProductId() : p.getId();
+                    if (cartEffectiveId == effectiveId) {
+                        qty += item.getQuantity();
+                    }
+                    break;
+                }
+            }
+        }
+        return qty;
+    }
+
+    private Product findProductById(int id) {
+        for (Product p : productList) {
+            if (p.getId() == id) return p;
+        }
+        return null;
     }
 
     private void showError(String message) {

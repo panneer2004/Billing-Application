@@ -59,7 +59,7 @@ public class VendorsController {
         TextFormatter<String> formatter = new TextFormatter<>(change -> {
             String newText = change.getControlNewText();
             if (newText.isEmpty()) return change;
-            if (newText.matches("[a-zA-Z ]*")) {
+            if (newText.matches("[a-zA-Z0-9 .&*-]*")) {
                 return change;
             }
             return null;

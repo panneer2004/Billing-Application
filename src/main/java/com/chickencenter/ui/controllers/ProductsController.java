@@ -5,6 +5,7 @@ import com.chickencenter.model.Vendor;
 import com.chickencenter.service.ProductService;
 import com.chickencenter.service.SecurityService;
 import com.chickencenter.util.DropdownUtils;
+import com.chickencenter.util.TableUtils;
 import com.chickencenter.util.ToastManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -171,6 +172,7 @@ public class ProductsController {
     private void setupTable() {
         tblProducts.setSelectionModel(null);
         tblProducts.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        TableUtils.addSerialNumberColumn(tblProducts, 0);
         colProductName.setCellFactory(col -> new TableCell<Product, String>() {
             @Override
             protected void updateItem(String item, boolean empty) {

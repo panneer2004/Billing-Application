@@ -7,6 +7,7 @@ import com.chickencenter.service.BillingService;
 import com.chickencenter.service.ProductService;
 import com.chickencenter.service.SecurityService;
 import com.chickencenter.util.DropdownUtils;
+import com.chickencenter.util.TableUtils;
 import com.chickencenter.util.ToastManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -466,6 +467,7 @@ public class SalesController {
         tblItemSales.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tblItemSales.setPlaceholder(new Label(""));
         tblItemSales.setItems(itemSaleList);
+        TableUtils.addSerialNumberColumn(tblItemSales, 0);
 
         colBillNo.setCellValueFactory(new PropertyValueFactory<>("billNo"));
         colBillNo.setCellFactory(col -> new TableCell<ItemSaleRecord, Integer>() {
@@ -888,6 +890,7 @@ public class SalesController {
                 setStyle("-fx-alignment: CENTER-RIGHT;-fx-font-size: 11;");
             }
         });
+        detailTable.getColumns().add(TableUtils.createSerialNumberColumn("Sl No", 40));
         detailTable.getColumns().addAll(colProduct, colBatchId, colQty, colPrice, colAmountDetail);
         try {
             List<SaleItem> items = billingService.getSaleItems(sale.getId());

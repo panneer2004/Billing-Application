@@ -2,6 +2,7 @@ package com.chickencenter.ui.controllers;
 
 import com.chickencenter.model.Vendor;
 import com.chickencenter.service.ExpenseService;
+import com.chickencenter.util.TableUtils;
 import com.chickencenter.util.ToastManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -70,6 +71,7 @@ public class VendorsController {
     private void setupTable() {
         tblVendors.setSelectionModel(null);
         tblVendors.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+        TableUtils.addSerialNumberColumn(tblVendors, 0);
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
         colContact.setCellValueFactory(new PropertyValueFactory<>("contactNumber"));
         tblVendors.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);

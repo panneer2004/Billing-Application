@@ -11,6 +11,7 @@ import com.chickencenter.service.AccountService;
 import com.chickencenter.service.BillingService;
 import com.chickencenter.service.ProductService;
 import com.chickencenter.util.DropdownUtils;
+import com.chickencenter.util.TableUtils;
 import com.chickencenter.util.ToastManager;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -159,6 +160,7 @@ public class BillingController {
     private void setupCartTable() {
         tblCart.setSelectionModel(null);
         tblCart.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        TableUtils.addSerialNumberColumn(tblCart, 0);
         colCartItem.setCellValueFactory(cellData -> {
             String itemName = getProductName(cellData.getValue().getItemId());
             return new javafx.beans.property.SimpleStringProperty(itemName);

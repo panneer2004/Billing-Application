@@ -5,6 +5,7 @@ import com.chickencenter.model.ShopExpense;
 import com.chickencenter.model.VendorExpense;
 import com.chickencenter.service.ExpenseService;
 import com.chickencenter.util.DropdownUtils;
+import com.chickencenter.util.TableUtils;
 import com.chickencenter.util.ToastManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -248,6 +249,7 @@ public class ExpensesController {
     private void setupVendorExpenseTable() {
         tblVendorExpenses.setSelectionModel(null);
         tblVendorExpenses.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        TableUtils.addSerialNumberColumn(tblVendorExpenses, 0);
         colVEVendor.setCellValueFactory(cellData -> {
             try {
                 var vendor = expenseService.getVendor(cellData.getValue().getVendorId());
@@ -271,6 +273,7 @@ public class ExpensesController {
     private void setupEmployeeExpenseTable() {
         tblEmployeeExpenses.setSelectionModel(null);
         tblEmployeeExpenses.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        TableUtils.addSerialNumberColumn(tblEmployeeExpenses, 0);
         colEEEmployee.setCellValueFactory(cellData -> {
             try {
                 var emp = expenseService.getEmployee(cellData.getValue().getEmployeeId());
@@ -511,6 +514,7 @@ public class ExpensesController {
     private void setupShopExpenseTable() {
         tblShopExpenses.setSelectionModel(null);
         tblShopExpenses.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        TableUtils.addSerialNumberColumn(tblShopExpenses, 0);
         colSEAction.setStyle("-fx-alignment: CENTER;");
         colSENote.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getNote() != null ? cellData.getValue().getNote() : ""));
         colSEAmount.setCellValueFactory(cellData -> new javafx.beans.property.SimpleDoubleProperty(cellData.getValue().getAmount()).asObject());

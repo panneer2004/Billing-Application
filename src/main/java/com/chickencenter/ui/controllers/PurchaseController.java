@@ -3,6 +3,7 @@ package com.chickencenter.ui.controllers;
 import com.chickencenter.dao.PurchaseDAO;
 import com.chickencenter.service.ProductService;
 import com.chickencenter.util.DropdownUtils;
+import com.chickencenter.util.TableUtils;
 import com.chickencenter.util.ToastManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -119,6 +120,7 @@ public class PurchaseController {
     private void setupTable() {
         tblPurchases.setSelectionModel(null);
         tblPurchases.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        TableUtils.addSerialNumberColumn(tblPurchases, 0);
 
         colProductName.setCellValueFactory(cellData ->
                 new javafx.beans.property.SimpleStringProperty(cellData.getValue().getProductName()));

@@ -6,6 +6,7 @@ import com.chickencenter.printer.ReceiptPrintTask;
 import com.chickencenter.printer.ThermalReceiptBuilder;
 import com.chickencenter.service.AccountService;
 import com.chickencenter.service.SecurityService;
+import com.chickencenter.ui.controllers.MainController;
 import com.chickencenter.util.ToastManager;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -528,6 +529,9 @@ public class AccountSettingsController {
             originalShopName = val;
             exitEditMode(txtShopName, lblShopName, boxShopNameActions, btnEditShopName, val);
             ToastManager.showSuccess("Updated successfully!");
+            if (MainController.getShopNameRefreshHandler() != null) {
+                MainController.getShopNameRefreshHandler().run();
+            }
         } catch (SQLException e) {
             showError("Error: " + e.getMessage());
         }

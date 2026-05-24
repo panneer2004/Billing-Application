@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.chickencenter.ui.controllers.BillingController"
+      style="-fx-background-color: #F1F5F9; -fx-padding: 15;">
+
+    <VBox style="-fx-background-color: #ffffff; -fx-padding: 12 20; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, #00000008, 3, 0, 0, 1);">
+        <Label text="Billing" textFill="#0F172A">
+            <font>
+                <Font size="18" name="Segoe UI Bold"/>
+            </font>
+        </Label>
+    </VBox>
+
+    <HBox spacing="15" style="-fx-padding: 15 0 0 0;">
+        <VBox spacing="12" prefWidth="380" style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 15; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
+            <Label text="Add Sale Item" textFill="#0F172A">
+                <font>
+                    <Font size="14" name="Segoe UI Bold"/>
+                </font>
+            </Label>
+            
+            <Separator style="-fx-padding: 5 0;"/>
+            
+            <VBox spacing="10">
+                <VBox spacing="5">
+                    <Label text="Select Product" textFill="#64748b">
+                        <font>
+                            <Font size="12" name="Segoe UI"/>
+                        </font>
+                    </Label>
+                    <ComboBox fx:id="cmbProduct" promptText="Choose Product" prefWidth="350"
+                              style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
+                </VBox>
+                
+                <HBox spacing="12">
+                    <VBox spacing="5" prefWidth="80">
+                        <Label text="Price" textFill="#64748b">
+                            <font>
+                                <Font size="12" name="Segoe UI"/>
+                            </font>
+                        </Label>
+                        <Label fx:id="lblPrice" text="Rs. 0.00" textFill="#10B981">
+                            <font>
+                                <Font size="14" name="Segoe UI Bold"/>
+                            </font>
+                        </Label>
+                    </VBox>
+                    <VBox spacing="5" prefWidth="80">
+                        <Label text="Quantity" textFill="#64748b">
+                            <font>
+                                <Font size="12" name="Segoe UI"/>
+                            </font>
+                        </Label>
+                        <TextField fx:id="txtQuantity" promptText="Enter qty" prefWidth="80" style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
+                    </VBox>
+                    <VBox spacing="5" prefWidth="80">
+                        <Label text="Amount" textFill="#64748b">
+                            <font>
+                                <Font size="12" name="Segoe UI"/>
+                            </font>
+                        </Label>
+                        <TextField fx:id="txtAmount" promptText="Total" prefWidth="80" style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
+                    </VBox>
+                    <VBox spacing="5" prefWidth="80">
+                        <Label text="Discount" textFill="#64748b">
+                            <font>
+                                <Font size="12" name="Segoe UI"/>
+                            </font>
+                        </Label>
+                        <TextField fx:id="txtDiscount" promptText="Optional" prefWidth="80" style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
+                    </VBox>
+                </HBox>
+                
+                <Label fx:id="lblHelperText" text="Enter quantity OR amount (auto calculated)" textFill="#94a3b8">
+                    <font>
+                        <Font size="11" name="Segoe UI"/>
+                    </font>
+                </Label>
+                
+                <Separator style="-fx-padding: 5 0;"/>
+                
+                <Button fx:id="btnAddToCart" text="+ Add Item" onAction="#addToCart" prefWidth="200" prefHeight="38"
+                        style="-fx-background-color: #10B981; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13; -fx-font-weight: bold; -fx-cursor: hand;"/>
+            </VBox>
+        </VBox>
+
+        <VBox spacing="12" prefWidth="500" style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 15; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
+            <Label text="Bill" textFill="#0F172A">
+                <font>
+                    <Font size="14" name="Segoe UI Bold"/>
+                </font>
+            </Label>
+            
+            <TableView fx:id="tblCart" prefHeight="280" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 4; -fx-table-cell-border-color: #e2e8f0;">
+                <columns>
+                    <TableColumn fx:id="colCartItem" text="Product" prefWidth="150" style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colCartQty" text="Qty" prefWidth="60" style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colCartPrice" text="Price" prefWidth="80" style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colCartDiscount" text="Discount" prefWidth="70" style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colCartFinal" text="Final Amt" prefWidth="90" style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="actionCol" text="Action" prefWidth="60" style="-fx-alignment: CENTER;"/>
+                </columns>
+            </TableView>
+            
+            <Separator style="-fx-padding: 8 0;"/>
+            
+            <HBox alignment="CENTER_RIGHT">
+                <Label text="TOTAL:" textFill="#64748b">
+                    <font>
+                        <Font size="16" name="Segoe UI"/>
+                    </font>
+                </Label>
+                <Region prefWidth="15"/>
+                <Label fx:id="lblTotalAmount" text="Rs.0.00" textFill="#2563eb">
+                    <font>
+                        <Font size="20" name="Segoe UI Bold"/>
+                    </font>
+                </Label>
+            </HBox>
+            
+            <VBox spacing="10" style="-fx-padding: 10 0 0 0;">
+                <VBox spacing="5">
+                    <Label text="Payment Mode" textFill="#64748b">
+                        <font>
+                            <Font size="12" name="Segoe UI"/>
+                        </font>
+                    </Label>
+                    <ComboBox fx:id="cmbPaymentMode" prefWidth="200" style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
+                </VBox>
+                
+                <VBox fx:id="cashFieldBox" spacing="5" visible="false" managed="false">
+                    <Label text="Cash Amount" textFill="#64748b">
+                        <font>
+                            <Font size="12" name="Segoe UI"/>
+                        </font>
+                    </Label>
+                    <TextField fx:id="txtCashAmount" promptText="Enter cash" prefWidth="200" style="-fx-background-radius: 5; -fx-padding: 8 10;"/>
+                </VBox>
+                
+                <VBox fx:id="gpayFieldBox" spacing="5" visible="false" managed="false">
+                    <Label text="GPay Amount" textFill="#64748b">
+                        <font>
+                            <Font size="12" name="Segoe UI"/>
+                        </font>
+                    </Label>
+                    <TextField fx:id="txtGpayAmount" editable="false" prefWidth="200" style="-fx-background-radius: 5; -fx-padding: 8 10; -fx-opacity: 0.7;"/>
+                </VBox>
+            </VBox>
+            
+            <HBox spacing="10" style="-fx-padding: 10 0 0 0;">
+                <Button fx:id="btnClearCart" text="Reset" onAction="#clearCart" prefWidth="90" prefHeight="38"
+                        style="-fx-background-color: #F59E0B; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 12; -fx-font-weight: bold; -fx-cursor: hand;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btnSave" text="Save" onAction="#saveSale" prefWidth="90" prefHeight="38"
+                        style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13; -fx-font-weight: bold; -fx-cursor: hand;"/>
+                <Button fx:id="btnSavePrint" text="Save &amp; Print" onAction="#saveAndPrintSale" prefWidth="110" prefHeight="38"
+                        style="-fx-background-color: #6366F1; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 13; -fx-font-weight: bold; -fx-cursor: hand;"/>
+            </HBox>
+        </VBox>
+    </HBox>
+
+</VBox>

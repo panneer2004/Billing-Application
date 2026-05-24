@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.chickencenter.ui.controllers.AccountSettingsController"
+      spacing="0" style="-fx-background-color: #F1F5F9;">
+
+    <VBox style="-fx-background-color: #ffffff; -fx-padding: 12 20; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, #00000008, 3, 0, 0, 1);" VBox.vgrow="NEVER">
+        <Label text="Account Settings" textFill="#0F172A">
+            <font>
+                <Font size="18" name="Segoe UI Bold"/>
+            </font>
+        </Label>
+    </VBox>
+
+    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" VBox.vgrow="ALWAYS"
+                style="-fx-background-color: transparent; -fx-border-color: transparent;">
+        <VBox alignment="TOP_CENTER" style="-fx-padding: 20 15;">
+            <VBox maxWidth="750" spacing="16">
+
+                <!-- ============================================================ -->
+                <!-- CARD 1: SHOP INFORMATION -->
+                <!-- ============================================================ -->
+                <VBox style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 0; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
+                    <HBox style="-fx-padding: 14 20; -fx-background-color: #f8fafc; -fx-background-radius: 8 8 0 0; -fx-border-color: #e2e8f0; -fx-border-width: 0 0 1 0;">
+                        <Label text="Shop Information" textFill="#0F172A">
+                            <font>
+                                <Font size="15" name="Segoe UI Semibold"/>
+                            </font>
+                        </Label>
+                    </HBox>
+
+                    <!-- Shop Name -->
+                    <HBox alignment="CENTER_LEFT" minHeight="48" spacing="10" style="-fx-padding: 8 20; -fx-border-color: #e2e8f0; -fx-border-width: 0 0 1 0;">
+                        <Label text="Shop Name" prefWidth="130" textFill="#475569" style="-fx-font-size: 13;">
+                            <font><Font name="Segoe UI"/></font>
+                        </Label>
+                        <Label fx:id="lblShopName" text="-" minWidth="0" textFill="#0F172A" style="-fx-font-size: 14; -fx-font-weight: bold;">
+                            <font><Font name="Segoe UI Semibold"/></font>
+                        </Label>
+                        <TextField fx:id="txtShopName" visible="false" managed="false" minWidth="180"
+                                   style="-fx-background-color: #ffffff; -fx-background-radius: 6; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-padding: 8 12; -fx-font-size: 13px;"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="btnEditShopName" text="Edit" onAction="#editShopName" prefWidth="56"
+                                style="-fx-background-color: transparent; -fx-text-fill: #2563eb; -fx-cursor: hand; -fx-font-size: 12; -fx-padding: 5 10; -fx-background-radius: 4; -fx-border-color: #2563eb; -fx-border-radius: 4; -fx-border-width: 1;"/>
+                        <HBox fx:id="boxShopNameActions" visible="false" managed="false" spacing="6">
+                            <Button text="Save" onAction="#saveShopName" prefWidth="54"
+                                    style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-background-radius: 4; -fx-cursor: hand; -fx-font-size: 11; -fx-padding: 5 8; -fx-font-weight: bold;"/>
+                            <Button text="Cancel" onAction="#cancelShopName" prefWidth="58"
+                                    style="-fx-background-color: #f1f5f9; -fx-text-fill: #64748b; -fx-background-radius: 4; -fx-cursor: hand; -fx-font-size: 11; -fx-padding: 5 8; -fx-border-color: #cbd5e1; -fx-border-radius: 4; -fx-border-width: 1;"/>
+                        </HBox>
+                    </HBox>
+
+                    <!-- Shop Address -->
+                    <HBox alignment="CENTER_LEFT" minHeight="48" spacing="10" style="-fx-padding: 8 20; -fx-border-color: #e2e8f0; -fx-border-width: 0 0 1 0;">
+                        <Label text="Address" prefWidth="130" textFill="#475569" style="-fx-font-size: 13;">
+                            <font><Font name="Segoe UI"/></font>
+                        </Label>
+                        <Label fx:id="lblShopAddress" text="-" minWidth="0" textFill="#0F172A" style="-fx-font-size: 14; -fx-font-weight: bold;">
+                            <font><Font name="Segoe UI Semibold"/></font>
+                        </Label>
+                        <TextField fx:id="txtShopAddress" visible="false" managed="false" minWidth="180"
+                                   style="-fx-background-color: #ffffff; -fx-background-radius: 6; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-padding: 8 12; -fx-font-size: 13px;"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="btnEditShopAddress" text="Edit" onAction="#editShopAddress" prefWidth="56"
+                                style="-fx-background-color: transparent; -fx-text-fill: #2563eb; -fx-cursor: hand; -fx-font-size: 12; -fx-padding: 5 10; -fx-background-radius: 4; -fx-border-color: #2563eb; -fx-border-radius: 4; -fx-border-width: 1;"/>
+                        <HBox fx:id="boxShopAddressActions" visible="false" managed="false" spacing="6">
+                            <Button text="Save" onAction="#saveShopAddress" prefWidth="54"
+                                    style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-background-radius: 4; -fx-cursor: hand; -fx-font-size: 11; -fx-padding: 5 8; -fx-font-weight: bold;"/>
+                            <Button text="Cancel" onAction="#cancelShopAddress" prefWidth="58"
+                                    style="-fx-background-color: #f1f5f9; -fx-text-fill: #64748b; -fx-background-radius: 4; -fx-cursor: hand; -fx-font-size: 11; -fx-padding: 5 8; -fx-border-color: #cbd5e1; -fx-border-radius: 4; -fx-border-width: 1;"/>
+                        </HBox>
+                    </HBox>
+
+                    <!-- Contact No 1 -->
+                    <HBox alignment="CENTER_LEFT" minHeight="48" spacing="10" style="-fx-padding: 8 20; -fx-border-color: #e2e8f0; -fx-border-width: 0 0 1 0;">
+                        <Label text="Contact No 1" prefWidth="130" textFill="#475569" style="-fx-font-size: 13;">
+                            <font><Font name="Segoe UI"/></font>
+                        </Label>
+                        <Label fx:id="lblContactNo1" text="-" minWidth="0" textFill="#0F172A" style="-fx-font-size: 14; -fx-font-weight: bold;">
+                            <font><Font name="Segoe UI Semibold"/></font>
+                        </Label>
+                        <TextField fx:id="txtContactNo1" visible="false" managed="false" minWidth="180"
+                                   style="-fx-background-color: #ffffff; -fx-background-radius: 6; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-padding: 8 12; -fx-font-size: 13px;"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="btnEditContactNo1" text="Edit" onAction="#editContactNo1" prefWidth="56"
+                                style="-fx-background-color: transparent; -fx-text-fill: #2563eb; -fx-cursor: hand; -fx-font-size: 12; -fx-padding: 5 10; -fx-background-radius: 4; -fx-border-color: #2563eb; -fx-border-radius: 4; -fx-border-width: 1;"/>
+                        <HBox fx:id="boxContactNo1Actions" visible="false" managed="false" spacing="6">
+                            <Button text="Save" onAction="#saveContactNo1" prefWidth="54"
+                                    style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-background-radius: 4; -fx-cursor: hand; -fx-font-size: 11; -fx-padding: 5 8; -fx-font-weight: bold;"/>
+                            <Button text="Cancel" onAction="#cancelContactNo1" prefWidth="58"
+                                    style="-fx-background-color: #f1f5f9; -fx-text-fill: #64748b; -fx-background-radius: 4; -fx-cursor: hand; -fx-font-size: 11; -fx-padding: 5 8; -fx-border-color: #cbd5e1; -fx-border-radius: 4; -fx-border-width: 1;"/>
+                        </HBox>
+                    </HBox>
+
+                    <!-- Contact No 2 -->
+                    <HBox alignment="CENTER_LEFT" minHeight="48" spacing="10" style="-fx-padding: 8 20; -fx-border-color: #e2e8f0; -fx-border-width: 0 0 1 0;">
+                        <Label text="Contact No 2" prefWidth="130" textFill="#475569" style="-fx-font-size: 13;">
+                            <font><Font name="Segoe UI"/></font>
+                        </Label>
+                        <Label fx:id="lblContactNo2" text="-" minWidth="0" textFill="#0F172A" style="-fx-font-size: 14; -fx-font-weight: bold;">
+                            <font><Font name="Segoe UI Semibold"/></font>
+                        </Label>
+                        <TextField fx:id="txtContactNo2" visible="false" managed="false" minWidth="180"
+                                   style="-fx-background-color: #ffffff; -fx-background-radius: 6; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-padding: 8 12; -fx-font-size: 13px;"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="btnEditContactNo2" text="Edit" onAction="#editContactNo2" prefWidth="56"
+                                style="-fx-background-color: transparent; -fx-text-fill: #2563eb; -fx-cursor: hand; -fx-font-size: 12; -fx-padding: 5 10; -fx-background-radius: 4; -fx-border-color: #2563eb; -fx-border-radius: 4; -fx-border-width: 1;"/>
+                        <HBox fx:id="boxContactNo2Actions" visible="false" managed="false" spacing="6">
+                            <Button text="Save" onAction="#saveContactNo2" prefWidth="54"
+                                    style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-background-radius: 4; -fx-cursor: hand; -fx-font-size: 11; -fx-padding: 5 8; -fx-font-weight: bold;"/>
+                            <Button text="Cancel" onAction="#cancelContactNo2" prefWidth="58"
+                                    style="-fx-background-color: #f1f5f9; -fx-text-fill: #64748b; -fx-background-radius: 4; -fx-cursor: hand; -fx-font-size: 11; -fx-padding: 5 8; -fx-border-color: #cbd5e1; -fx-border-radius: 4; -fx-border-width: 1;"/>
+                        </HBox>
+                    </HBox>
+
+                    <!-- Contact No 3 -->
+                    <HBox alignment="CENTER_LEFT" minHeight="48" spacing="10" style="-fx-padding: 8 20;">
+                        <Label text="Contact No 3" prefWidth="130" textFill="#475569" style="-fx-font-size: 13;">
+                            <font><Font name="Segoe UI"/></font>
+                        </Label>
+                        <Label fx:id="lblContactNo3" text="-" minWidth="0" textFill="#0F172A" style="-fx-font-size: 14; -fx-font-weight: bold;">
+                            <font><Font name="Segoe UI Semibold"/></font>
+                        </Label>
+                        <TextField fx:id="txtContactNo3" visible="false" managed="false" minWidth="180"
+                                   style="-fx-background-color: #ffffff; -fx-background-radius: 6; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-padding: 8 12; -fx-font-size: 13px;"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="btnEditContactNo3" text="Edit" onAction="#editContactNo3" prefWidth="56"
+                                style="-fx-background-color: transparent; -fx-text-fill: #2563eb; -fx-cursor: hand; -fx-font-size: 12; -fx-padding: 5 10; -fx-background-radius: 4; -fx-border-color: #2563eb; -fx-border-radius: 4; -fx-border-width: 1;"/>
+                        <HBox fx:id="boxContactNo3Actions" visible="false" managed="false" spacing="6">
+                            <Button text="Save" onAction="#saveContactNo3" prefWidth="54"
+                                    style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-background-radius: 4; -fx-cursor: hand; -fx-font-size: 11; -fx-padding: 5 8; -fx-font-weight: bold;"/>
+                            <Button text="Cancel" onAction="#cancelContactNo3" prefWidth="58"
+                                    style="-fx-background-color: #f1f5f9; -fx-text-fill: #64748b; -fx-background-radius: 4; -fx-cursor: hand; -fx-font-size: 11; -fx-padding: 5 8; -fx-border-color: #cbd5e1; -fx-border-radius: 4; -fx-border-width: 1;"/>
+                        </HBox>
+                    </HBox>
+                </VBox>
+
+                <!-- ============================================================ -->
+                <!-- CARD 2: THERMAL PRINTER -->
+                <!-- ============================================================ -->
+                <VBox style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 0; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
+                    <HBox style="-fx-padding: 14 20; -fx-background-color: #f8fafc; -fx-background-radius: 8 8 0 0; -fx-border-color: #e2e8f0; -fx-border-width: 0 0 1 0;">
+                        <Label text="Thermal Printer" textFill="#0F172A">
+                            <font>
+                                <Font size="15" name="Segoe UI Semibold"/>
+                            </font>
+                        </Label>
+                    </HBox>
+
+                    <VBox spacing="10" style="-fx-padding: 16 20;">
+                        <VBox spacing="6">
+                            <ComboBox fx:id="cmbPrinter" prefWidth="300" maxWidth="Infinity"
+                                      style="-fx-background-radius: 6; -fx-background-color: #ffffff; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-padding: 4 8; -fx-font-size: 13;"/>
+                            <Label fx:id="lblPrinterStatus" text="-" textFill="#10b981" style="-fx-font-size: 12;">
+                                <font><Font name="Segoe UI"/></font>
+                            </Label>
+                        </VBox>
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Button fx:id="btnRefreshPrinters" text="Refresh" onAction="#refreshPrinters" prefWidth="80" prefHeight="32"
+                                    style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-background-radius: 6; -fx-cursor: hand; -fx-font-size: 12; -fx-padding: 6 12; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-border-width: 1;"/>
+                            <Button fx:id="btnTestPrint" text="Test Print" onAction="#testPrint" prefWidth="90" prefHeight="32"
+                                    style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 6; -fx-cursor: hand; -fx-font-size: 12; -fx-padding: 6 12; -fx-font-weight: bold;"/>
+                        </HBox>
+                    </VBox>
+                </VBox>
+
+                <!-- ============================================================ -->
+                <!-- CARD 3: SECURITY SETTINGS -->
+                <!-- ============================================================ -->
+                <VBox style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 0; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
+                    <HBox style="-fx-padding: 14 20; -fx-background-color: #f8fafc; -fx-background-radius: 8 8 0 0; -fx-border-color: #e2e8f0; -fx-border-width: 0 0 1 0;">
+                        <Label text="Security Settings" textFill="#0F172A">
+                            <font>
+                                <Font size="15" name="Segoe UI Semibold"/>
+                            </font>
+                        </Label>
+                    </HBox>
+
+                    <!-- Password -->
+                    <HBox alignment="CENTER_LEFT" minHeight="48" spacing="12" style="-fx-padding: 8 20; -fx-border-color: #e2e8f0; -fx-border-width: 0 0 1 0;">
+                        <Label text="Password" prefWidth="130" textFill="#475569" style="-fx-font-size: 13;">
+                            <font><Font name="Segoe UI"/></font>
+                        </Label>
+                        <PasswordField fx:id="txtPassword" HBox.hgrow="ALWAYS" minWidth="180" promptText="Set a password"
+                                       style="-fx-background-color: #ffffff; -fx-background-radius: 6; -fx-border-color: #cbd5e1; -fx-border-radius: 6; -fx-padding: 8 12; -fx-font-size: 13px;"/>
+                        <HBox spacing="6" alignment="CENTER_RIGHT" prefWidth="130">
+                            <Button fx:id="btnSavePassword" text="Save" onAction="#savePassword" prefWidth="54"
+                                    style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 4; -fx-cursor: hand; -fx-font-size: 11; -fx-padding: 5 10; -fx-font-weight: bold;"/>
+                            <Button fx:id="btnChangePassword" text="Change" onAction="#changePassword" visible="false" managed="false" prefWidth="62"
+                                    style="-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-background-radius: 4; -fx-cursor: hand; -fx-font-size: 11; -fx-padding: 5 10; -fx-font-weight: bold;"/>
+                            <Button fx:id="btnForgotPassword" text="Reset?" onAction="#forgotPassword" visible="false" managed="false" prefWidth="54"
+                                    style="-fx-background-color: transparent; -fx-text-fill: #dc2626; -fx-cursor: hand; -fx-font-size: 11; -fx-padding: 5 6; -fx-border-color: #fca5a5; -fx-border-radius: 4; -fx-border-width: 1;"/>
+                        </HBox>
+                    </HBox>
+
+                    <!-- Security Lock Toggle -->
+                    <HBox alignment="CENTER_LEFT" minHeight="48" spacing="12" style="-fx-padding: 8 20;">
+                        <Label text="Security Lock" prefWidth="130" textFill="#475569" style="-fx-font-size: 13;">
+                            <font><Font name="Segoe UI"/></font>
+                        </Label>
+                        <HBox alignment="CENTER_LEFT" spacing="10" HBox.hgrow="ALWAYS" minWidth="180">
+                            <Label fx:id="lblSecurityStatus" text="OFF" textFill="#6b7280" style="-fx-font-size: 14; -fx-font-weight: bold;">
+                                <font><Font name="Segoe UI Semibold"/></font>
+                            </Label>
+                        </HBox>
+                        <HBox spacing="6" alignment="CENTER_RIGHT" prefWidth="130">
+                            <Button fx:id="btnToggleSecurity" text="Enable" onAction="#toggleSecurity" prefWidth="70" prefHeight="32"
+                                    style="-fx-background-color: #6b7280; -fx-text-fill: white; -fx-background-radius: 6; -fx-cursor: hand; -fx-font-size: 12; -fx-padding: 6 12; -fx-font-weight: bold;"/>
+                        </HBox>
+                    </HBox>
+                </VBox>
+
+            </VBox>
+        </VBox>
+    </ScrollPane>
+
+</VBox>

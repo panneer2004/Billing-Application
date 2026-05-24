@@ -1,5 +1,6 @@
 package com.chickencenter.ui.controllers;
 
+import com.chickencenter.model.Account;
 import com.chickencenter.service.BillingService;
 import com.chickencenter.service.ExpenseService;
 import com.chickencenter.service.AccountService;
@@ -10,8 +11,10 @@ import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
+import javafx.scene.text.Text;
 import javafx.animation.FadeTransition;
 import javafx.util.Duration;
+import java.sql.SQLException;
 
 public class MainController {
 
@@ -25,6 +28,9 @@ public class MainController {
     @FXML private Button btnEmployees;
     @FXML private Button btnExpenses;
     @FXML private Button btnAccountSettings;
+    @FXML private Text sidebarShopTitle;
+
+    private static Runnable onShopNameChanged;
 
     private final String activeBtnStyle = "-fx-background-color: linear-gradient(to right, #2563eb, #3b82f6); -fx-background-radius: 14; -fx-cursor: hand; -fx-padding: 0 20;";
     private final String normalBtnStyle = "-fx-background-color: transparent; -fx-background-radius: 14; -fx-cursor: hand; -fx-padding: 0 20;";
@@ -41,8 +47,26 @@ public class MainController {
         this.securityService = new SecurityService();
     }
 
+    private void refreshShopName() {
+        if (sidebarShopTitle == null) return;
+        try {
+            Account a = accountService.getAccount();
+            String name = (a != null && a.getShopName() != null && !a.getShopName().trim().isEmpty())
+                    ? a.getShopName().trim() : "JK CHICKEN CENTER";
+            sidebarShopTitle.setText(name);
+        } catch (SQLException e) {
+            sidebarShopTitle.setText("JK CHICKEN CENTER");
+        }
+    }
+
+    public static Runnable getShopNameRefreshHandler() {
+        return onShopNameChanged;
+    }
+
     @FXML
     public void initialize() {
+        onShopNameChanged = this::refreshShopName;
+        refreshShopName();
         NavigationHelper.setNavigationCallback(() -> {
             String target = NavigationHelper.getNavigateTo();
             if (target != null) {

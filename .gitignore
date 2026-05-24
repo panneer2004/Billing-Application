@@ -12,6 +12,13 @@ target/
 *.jar
 *.log
 
+.idea/
+target/
+runtime/
+*.exe
+log.txt
+*.iml
+
 # Database
 *.db
 *.db.sqbpro

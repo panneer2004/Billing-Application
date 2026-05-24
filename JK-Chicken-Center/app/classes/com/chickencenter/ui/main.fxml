@@ -15,7 +15,7 @@
 
             <VBox alignment="CENTER_LEFT" prefHeight="120" styleClass="sidebar-logo">
                 <Text text="🐔" styleClass="logo-icon"/>
-                <Text fx:id="sidebarShopTitle" text="JK Chicken Center" styleClass="logo-title"/>
+                <Text text="JK Chicken Center" styleClass="logo-title"/>
                 <Text text="Billing Management" styleClass="logo-subtitle"/>
             </VBox>
 

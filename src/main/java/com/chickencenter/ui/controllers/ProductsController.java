@@ -154,7 +154,7 @@ public class ProductsController {
 
     private void setupAlphabetField(TextField field) {
         field.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null && !newVal.matches("[a-zA-Z ]*")) {
+            if (newVal != null && !newVal.matches("[a-zA-Z0-9 ./&-]*")) {
                 field.setText(oldVal);
             }
         });

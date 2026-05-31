@@ -18,20 +18,6 @@
         </Label>
     </VBox>
 
-    <!-- Filters Bar -->
-    <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 12 20; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
-        <Label text="From:" textFill="#64748b" style="-fx-font-size: 12;"/>
-        <DatePicker fx:id="dpFromDate" prefWidth="130" prefHeight="30" style="-fx-background-radius: 5;"/>
-        
-        <Label text="To:" textFill="#64748b" style="-fx-font-size: 12;"/>
-        <DatePicker fx:id="dpToDate" prefWidth="130" prefHeight="30" style="-fx-background-radius: 5;"/>
-        
-        <Region HBox.hgrow="ALWAYS"/>
-        
-        <Button fx:id="btnExport" text="Export to Excel" onAction="#exportToExcel" prefWidth="130" prefHeight="32"
-                style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 11; -fx-font-weight: bold; -fx-cursor: hand;"/>
-    </HBox>
-
     <!-- Toggle Buttons -->
     <HBox spacing="10" style="-fx-padding: 4 0 0 0;">
         <Button fx:id="btnVendorView" text="Vendor Expenses" onAction="#showVendorView" prefWidth="130" prefHeight="34"
@@ -111,12 +97,22 @@
 
         <!-- Table -->
         <VBox VBox.vgrow="ALWAYS" style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 12; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
-            <HBox style="-fx-padding: 0 0 10 0;">
+            <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 0 0 10 0;">
                 <Label text="Vendor Expenses" textFill="#0F172A">
                     <font>
                         <Font size="14" name="Segoe UI Bold"/>
                     </font>
                 </Label>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="From:" textFill="#64748b" style="-fx-font-size: 12;"/>
+                <DatePicker fx:id="veDpFrom" prefWidth="140" prefHeight="30" style="-fx-background-radius: 5;"/>
+                <Label text="To:" textFill="#64748b" style="-fx-font-size: 12;"/>
+                <DatePicker fx:id="veDpTo" prefWidth="140" prefHeight="30" style="-fx-background-radius: 5;"/>
+                <Button text="Clear Filter" onAction="#clearVendorFilter" prefWidth="110" prefHeight="36"
+                        style="-fx-background-color: #64748b; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 11; -fx-font-weight: bold; -fx-cursor: hand;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btnExport" text="Export to Excel" onAction="#exportToExcel" prefWidth="130" prefHeight="36"
+                        style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 11; -fx-font-weight: bold; -fx-cursor: hand;"/>
             </HBox>
 
             <TableView fx:id="tblVendorExpenses" VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 4; -fx-table-cell-border-color: #e2e8f0;">
@@ -127,6 +123,11 @@
                     <TableColumn fx:id="colVEDate" text="Date" prefWidth="100" style="-fx-alignment: CENTER;"/>
                 </columns>
             </TableView>
+
+            <HBox alignment="CENTER_RIGHT" style="-fx-padding: 8 0 0 0;">
+                <Label text="Total Vendor Expense: " textFill="#0F172A" style="-fx-font-size: 14; -fx-font-weight: bold;"/>
+                <Label fx:id="lblVendorTotal" text="Rs. 0.00" textFill="#2563eb" style="-fx-font-size: 14; -fx-font-weight: bold;"/>
+            </HBox>
         </VBox>
     </VBox>
 
@@ -196,12 +197,22 @@
 
         <!-- Table -->
         <VBox VBox.vgrow="ALWAYS" style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 12; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
-            <HBox style="-fx-padding: 0 0 10 0;">
+            <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 0 0 10 0;">
                 <Label text="Employee Expenses" textFill="#0F172A">
                     <font>
                         <Font size="14" name="Segoe UI Bold"/>
                     </font>
                 </Label>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="From:" textFill="#64748b" style="-fx-font-size: 12;"/>
+                <DatePicker fx:id="eeDpFrom" prefWidth="140" prefHeight="30" style="-fx-background-radius: 5;"/>
+                <Label text="To:" textFill="#64748b" style="-fx-font-size: 12;"/>
+                <DatePicker fx:id="eeDpTo" prefWidth="140" prefHeight="30" style="-fx-background-radius: 5;"/>
+                <Button text="Clear Filter" onAction="#clearEmployeeFilter" prefWidth="110" prefHeight="36"
+                        style="-fx-background-color: #64748b; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 11; -fx-font-weight: bold; -fx-cursor: hand;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Export to Excel" onAction="#exportToExcel" prefWidth="130" prefHeight="36"
+                        style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 11; -fx-font-weight: bold; -fx-cursor: hand;"/>
             </HBox>
 
             <TableView fx:id="tblEmployeeExpenses" VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 4; -fx-table-cell-border-color: #e2e8f0;">
@@ -212,6 +223,11 @@
                     <TableColumn fx:id="colEEDate" text="Date" prefWidth="100" style="-fx-alignment: CENTER;"/>
                 </columns>
             </TableView>
+
+            <HBox alignment="CENTER_RIGHT" style="-fx-padding: 8 0 0 0;">
+                <Label text="Total Employee Expense: " textFill="#0F172A" style="-fx-font-size: 14; -fx-font-weight: bold;"/>
+                <Label fx:id="lblEmployeeTotal" text="Rs. 0.00" textFill="#2563eb" style="-fx-font-size: 14; -fx-font-weight: bold;"/>
+            </HBox>
         </VBox>
     </VBox>
 
@@ -271,12 +287,22 @@
 
         <!-- Table -->
         <VBox VBox.vgrow="ALWAYS" style="-fx-background-color: #ffffff; -fx-background-radius: 8; -fx-padding: 12; -fx-effect: dropshadow(gaussian, #0000000d, 5, 0, 0, 2);">
-            <HBox style="-fx-padding: 0 0 10 0;">
+            <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 0 0 10 0;">
                 <Label text="Shop Expenses" textFill="#0F172A">
                     <font>
                         <Font size="14" name="Segoe UI Bold"/>
                     </font>
                 </Label>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="From:" textFill="#64748b" style="-fx-font-size: 12;"/>
+                <DatePicker fx:id="seDpFrom" prefWidth="140" prefHeight="30" style="-fx-background-radius: 5;"/>
+                <Label text="To:" textFill="#64748b" style="-fx-font-size: 12;"/>
+                <DatePicker fx:id="seDpTo" prefWidth="140" prefHeight="30" style="-fx-background-radius: 5;"/>
+                <Button text="Clear Filter" onAction="#clearShopFilter" prefWidth="110" prefHeight="36"
+                        style="-fx-background-color: #64748b; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 11; -fx-font-weight: bold; -fx-cursor: hand;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Export to Excel" onAction="#exportToExcel" prefWidth="130" prefHeight="36"
+                        style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 11; -fx-font-weight: bold; -fx-cursor: hand;"/>
             </HBox>
 
             <TableView fx:id="tblShopExpenses" VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 4; -fx-table-cell-border-color: #e2e8f0;">
@@ -287,6 +313,11 @@
                     <TableColumn fx:id="colSEAction" text="Action" prefWidth="120" minWidth="100" style="-fx-alignment: CENTER;"/>
                 </columns>
             </TableView>
+
+            <HBox alignment="CENTER_RIGHT" style="-fx-padding: 8 0 0 0;">
+                <Label text="Total Shop Expense: " textFill="#0F172A" style="-fx-font-size: 14; -fx-font-weight: bold;"/>
+                <Label fx:id="lblShopTotal" text="Rs. 0.00" textFill="#2563eb" style="-fx-font-size: 14; -fx-font-weight: bold;"/>
+            </HBox>
         </VBox>
     </VBox>
 

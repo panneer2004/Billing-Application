@@ -41,11 +41,25 @@ public class ExpensesController {
     @FXML
     private VBox shopExpenseContainer;
     @FXML
-    private DatePicker dpFromDate;
-    @FXML
-    private DatePicker dpToDate;
-    @FXML
     private Button btnExport;
+    @FXML
+    private DatePicker veDpFrom;
+    @FXML
+    private DatePicker veDpTo;
+    @FXML
+    private DatePicker eeDpFrom;
+    @FXML
+    private DatePicker eeDpTo;
+    @FXML
+    private DatePicker seDpFrom;
+    @FXML
+    private DatePicker seDpTo;
+    @FXML
+    private Label lblVendorTotal;
+    @FXML
+    private Label lblEmployeeTotal;
+    @FXML
+    private Label lblShopTotal;
     @FXML
     private TableView<VendorExpense> tblVendorExpenses;
     @FXML
@@ -132,11 +146,6 @@ public class ExpensesController {
         setupShopExpenseTable();
         loadVendors();
         loadEmployees();
-        loadVendorExpenses();
-        loadEmployeeExpenses();
-        loadShopExpenses();
-        dpFromDate.setValue(LocalDate.now());
-        dpToDate.setValue(LocalDate.now());
         setupNumericField(txtVEAmount);
         setupNumericField(txtEEAmount);
         setupNumericField(txtSEAmount);
@@ -165,10 +174,21 @@ public class ExpensesController {
         dpVEDate.setValue(LocalDate.now());
         dpEEDate.setValue(LocalDate.now());
         dpSEDate.setValue(LocalDate.now());
-        dpFromDate.setValue(LocalDate.now().minusMonths(1));
-        dpToDate.setValue(LocalDate.now());
-        dpFromDate.setOnAction(e -> filterAllExpenses());
-        dpToDate.setOnAction(e -> filterAllExpenses());
+        veDpFrom.setValue(LocalDate.now());
+        veDpTo.setValue(LocalDate.now());
+        eeDpFrom.setValue(LocalDate.now());
+        eeDpTo.setValue(LocalDate.now());
+        seDpFrom.setValue(LocalDate.now());
+        seDpTo.setValue(LocalDate.now());
+        veDpFrom.setOnAction(e -> filterVendorExpenses());
+        veDpTo.setOnAction(e -> filterVendorExpenses());
+        eeDpFrom.setOnAction(e -> filterEmployeeExpenses());
+        eeDpTo.setOnAction(e -> filterEmployeeExpenses());
+        seDpFrom.setOnAction(e -> filterShopExpenses());
+        seDpTo.setOnAction(e -> filterShopExpenses());
+        filterVendorExpenses();
+        filterEmployeeExpenses();
+        filterShopExpenses();
         DropdownUtils.makeScrollable(cmbExpenseVendor);
         DropdownUtils.makeScrollable(cmbExpenseEmployee);
         showVendorView();
@@ -232,25 +252,79 @@ public class ExpensesController {
         field.setTextFormatter(formatter);
     }
 
-    private void filterAllExpenses() {
-        LocalDate fromDate = dpFromDate.getValue();
-        LocalDate toDate = dpToDate.getValue();
-        if (fromDate != null && toDate != null) {
-            if (fromDate.isAfter(toDate)) {
-                showError("From date cannot be after To date");
-                return;
+    private void filterVendorExpenses() {
+        LocalDate from = veDpFrom.getValue();
+        LocalDate to = veDpTo.getValue();
+        try {
+            vendorExpenseList.clear();
+            if (from != null && to != null) {
+                if (from.isAfter(to)) return;
+                vendorExpenseList.addAll(expenseService.getVendorExpensesByDateRange(from, to));
+            } else {
+                vendorExpenseList.addAll(expenseService.getAllVendorExpenses());
             }
-            try {
-                vendorExpenseList.clear();
-                vendorExpenseList.addAll(expenseService.getVendorExpensesByDateRange(fromDate, toDate));
-                employeeExpenseList.clear();
-                employeeExpenseList.addAll(expenseService.getEmployeeExpensesByDateRange(fromDate, toDate));
-                shopExpenseList.clear();
-                shopExpenseList.addAll(expenseService.getShopExpensesByDateRange(fromDate, toDate));
-            } catch (SQLException e) {
-                showError("Error filtering expenses: " + e.getMessage());
-            }
+            updateVendorTotal();
+        } catch (SQLException e) {
+            showError("Error loading vendor expenses");
         }
+    }
+
+    private void filterEmployeeExpenses() {
+        LocalDate from = eeDpFrom.getValue();
+        LocalDate to = eeDpTo.getValue();
+        try {
+            employeeExpenseList.clear();
+            if (from != null && to != null) {
+                if (from.isAfter(to)) return;
+                employeeExpenseList.addAll(expenseService.getEmployeeExpensesByDateRange(from, to));
+            } else {
+                employeeExpenseList.addAll(expenseService.getAllEmployeeExpenses());
+            }
+            updateEmployeeTotal();
+        } catch (SQLException e) {
+            showError("Error loading employee expenses");
+        }
+    }
+
+    private void filterShopExpenses() {
+        LocalDate from = seDpFrom.getValue();
+        LocalDate to = seDpTo.getValue();
+        try {
+            shopExpenseList.clear();
+            if (from != null && to != null) {
+                if (from.isAfter(to)) return;
+                shopExpenseList.addAll(expenseService.getShopExpensesByDateRange(from, to));
+            } else {
+                shopExpenseList.addAll(expenseService.getAllShopExpenses());
+            }
+            updateShopTotal();
+        } catch (SQLException e) {
+            showError("Error loading shop expenses");
+        }
+    }
+
+    private void updateVendorTotal() {
+        double total = 0;
+        for (VendorExpense e : vendorExpenseList) {
+            total += e.getAmount();
+        }
+        lblVendorTotal.setText(String.format("Rs. %.2f", total));
+    }
+
+    private void updateEmployeeTotal() {
+        double total = 0;
+        for (EmployeeExpense e : employeeExpenseList) {
+            total += e.getAmount();
+        }
+        lblEmployeeTotal.setText(String.format("Rs. %.2f", total));
+    }
+
+    private void updateShopTotal() {
+        double total = 0;
+        for (ShopExpense e : shopExpenseList) {
+            total += e.getAmount();
+        }
+        lblShopTotal.setText(String.format("Rs. %.2f", total));
     }
 
     private void setupVendorExpenseTable() {
@@ -326,30 +400,15 @@ public class ExpensesController {
     }
 
     private void loadVendorExpenses() {
-        try {
-            vendorExpenseList.clear();
-            vendorExpenseList.addAll(expenseService.getAllVendorExpenses());
-        } catch (SQLException e) {
-            showError("Error loading expenses");
-        }
+        filterVendorExpenses();
     }
 
     private void loadEmployeeExpenses() {
-        try {
-            employeeExpenseList.clear();
-            employeeExpenseList.addAll(expenseService.getAllEmployeeExpenses());
-        } catch (SQLException e) {
-            showError("Error loading expenses");
-        }
+        filterEmployeeExpenses();
     }
 
     private void loadShopExpenses() {
-        try {
-            shopExpenseList.clear();
-            shopExpenseList.addAll(expenseService.getAllShopExpenses());
-        } catch (SQLException e) {
-            showError("Error loading expenses");
-        }
+        filterShopExpenses();
     }
 
     @FXML
@@ -638,6 +697,27 @@ public class ExpensesController {
         isShopExpenseEditMode = true;
         editingShopExpenseId = exp.getId();
         btnAddShopExpense.setText("Update Expense");
+    }
+
+    @FXML
+    private void clearVendorFilter() {
+        veDpFrom.setValue(null);
+        veDpTo.setValue(null);
+        filterVendorExpenses();
+    }
+
+    @FXML
+    private void clearEmployeeFilter() {
+        eeDpFrom.setValue(null);
+        eeDpTo.setValue(null);
+        filterEmployeeExpenses();
+    }
+
+    @FXML
+    private void clearShopFilter() {
+        seDpFrom.setValue(null);
+        seDpTo.setValue(null);
+        filterShopExpenses();
     }
 
     private void showError(String msg) {

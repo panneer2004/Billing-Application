@@ -50,7 +50,7 @@ public class SalesController {
     @FXML private VBox cashCard;
     @FXML private VBox gpayCard;
     @FXML private VBox productSummaryCard;
-    @FXML private Button btnDeleteFiltered;
+
     @FXML private DatePicker dpFromDate;
     @FXML private DatePicker dpToDate;
     @FXML private Label lblTotalCash;
@@ -633,13 +633,6 @@ public class SalesController {
             salesList.addAll(sales);
             tblSales.setItems(salesList);
             tblSales.refresh();
-            boolean locked = securityService.isDeleteLockEnabled();
-            btnDeleteFiltered.setDisable(locked);
-            if (locked) {
-                btnDeleteFiltered.setStyle("-fx-background-color: #d1d5db; -fx-text-fill: #9ca3af; -fx-background-radius: 5; -fx-font-size: 11; -fx-font-weight: bold; -fx-cursor: default;");
-            } else {
-                btnDeleteFiltered.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 11; -fx-font-weight: bold; -fx-cursor: hand;");
-            }
             updateSummaries();
             updateSecurityLockUI();
         } catch (SQLException e) {
@@ -731,33 +724,6 @@ public class SalesController {
                 filterSales();
             } catch (SQLException e) {
                 showError("Error deleting sale: " + e.getMessage());
-            }
-        }
-    }
-
-    @FXML
-    private void deleteFilteredSales() {
-        if (securityService.isDeleteLockEnabled()) {
-            showError("Delete is locked. Disable security lock in Account Settings to proceed.");
-            return;
-        }
-        if (salesList.isEmpty()) {
-            showError("No sales to delete");
-            return;
-        }
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Confirm Delete");
-        confirm.setHeaderText("Delete Filtered Sales");
-        confirm.setContentText("Delete all " + salesList.size() + " filtered sale(s)? Stock will be restored.");
-        if (confirm.showAndWait().get() == ButtonType.OK) {
-            try {
-                for (Sale sale : salesList) {
-                    billingService.deleteSale(sale.getId());
-                }
-                ToastManager.showSuccess(salesList.size() + " sale(s) deleted successfully!");
-                filterSales();
-            } catch (SQLException e) {
-                showError("Error deleting sales: " + e.getMessage());
             }
         }
     }

@@ -79,8 +79,6 @@
                 </Label>
                 <DatePicker fx:id="dpToDate" prefWidth="130" prefHeight="30" style="-fx-background-radius: 5;"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Button fx:id="btnDeleteFiltered" text="Delete Filtered" onAction="#deleteFilteredSales" prefWidth="120" prefHeight="32"
-                        style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 11; -fx-font-weight: bold; -fx-cursor: hand;"/>
                 <Button fx:id="btnExportToday" text="Export Today" onAction="#exportTodayData" prefWidth="110" prefHeight="32"
                         style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-size: 11; -fx-font-weight: bold; -fx-cursor: hand;"/>
                 <Button fx:id="btnExport" text="Export to Excel" onAction="#exportToExcel" prefWidth="130" prefHeight="32"

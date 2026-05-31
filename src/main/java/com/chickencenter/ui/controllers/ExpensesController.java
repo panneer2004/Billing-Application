@@ -214,7 +214,14 @@ public class ExpensesController {
     }
 
     private void setupNumericField(TextField field) {
-        TextFormatter<Double> formatter = new TextFormatter<>(new DoubleStringConverter(), 0.0, change -> {
+        field.setPromptText("Enter expense amount");
+        TextFormatter<Double> formatter = new TextFormatter<>(new DoubleStringConverter() {
+            @Override
+            public Double fromString(String value) {
+                if (value == null || value.trim().isEmpty()) return null;
+                return super.fromString(value);
+            }
+        }, null, change -> {
             String newText = change.getControlNewText();
             if (newText.isEmpty()) return change;
             if (newText.matches("\\d*(\\.\\d{0,2})?")) {
@@ -355,9 +362,15 @@ public class ExpensesController {
             return;
         }
         String note = txtVENote.getText().trim();
+        String amountText = txtVEAmount.getText();
+        if (amountText == null || amountText.trim().isEmpty()) {
+            showError("Amount cannot be empty");
+            btnAddVendorExpense.setDisable(false);
+            return;
+        }
         double amount;
         try {
-            amount = Double.parseDouble(txtVEAmount.getText());
+            amount = Double.parseDouble(amountText);
         } catch (NumberFormatException e) {
             showError("Invalid amount");
             btnAddVendorExpense.setDisable(false);
@@ -394,9 +407,15 @@ public class ExpensesController {
             return;
         }
         String note = txtEENote.getText().trim();
+        String amountText = txtEEAmount.getText();
+        if (amountText == null || amountText.trim().isEmpty()) {
+            showError("Amount cannot be empty");
+            btnAddEmployeeExpense.setDisable(false);
+            return;
+        }
         double amount;
         try {
-            amount = Double.parseDouble(txtEEAmount.getText());
+            amount = Double.parseDouble(amountText);
         } catch (NumberFormatException e) {
             showError("Invalid amount");
             btnAddEmployeeExpense.setDisable(false);
@@ -567,9 +586,14 @@ public class ExpensesController {
             showError("Note cannot be empty");
             return;
         }
+        String amountText = txtSEAmount.getText();
+        if (amountText == null || amountText.trim().isEmpty()) {
+            showError("Amount cannot be empty");
+            return;
+        }
         double amount;
         try {
-            amount = Double.parseDouble(txtSEAmount.getText());
+            amount = Double.parseDouble(amountText);
         } catch (NumberFormatException e) {
             showError("Invalid amount");
             return;

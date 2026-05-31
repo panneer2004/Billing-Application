@@ -328,21 +328,37 @@ public class BillingController {
         cmbPaymentMode.setValue("Cash");
         cmbPaymentMode.setOnAction(e -> handlePaymentModeChange());
         handlePaymentModeChange();
-        setupNumericField(txtCashAmount);
+
+        TextFormatter<Double> cashFormatter = new TextFormatter<>(new DoubleStringConverter() {
+            @Override
+            public Double fromString(String value) {
+                if (value == null || value.trim().isEmpty()) return null;
+                return super.fromString(value);
+            }
+        }, null, change -> {
+            String newText = change.getControlNewText();
+            if (newText.isEmpty()) return change;
+            if (!newText.matches("\\d*(\\.\\d{0,2})?")) return null;
+            try {
+                double val = Double.parseDouble(newText);
+                if (val > calculateCartTotal()) return null;
+            } catch (NumberFormatException e) {
+                return null;
+            }
+            return change;
+        });
+        txtCashAmount.setTextFormatter(cashFormatter);
+
         txtCashAmount.textProperty().addListener((obs, oldVal, newVal) -> {
+            String mode = cmbPaymentMode.getValue();
+            if (!"Both".equalsIgnoreCase(mode)) return;
             if (newVal == null || newVal.isEmpty()) {
                 txtGpayAmount.setText("0.00");
                 return;
             }
             try {
                 double cash = Double.parseDouble(newVal);
-                double total = calculateCartTotal();
-                if (cash > total) {
-                    showError("Cash amount cannot exceed total amount");
-                    txtCashAmount.setText(oldVal != null ? oldVal : "0");
-                    return;
-                }
-                double gpay = total - cash;
+                double gpay = calculateCartTotal() - cash;
                 txtGpayAmount.setText(String.format("%.2f", Math.max(0, gpay)));
             } catch (NumberFormatException e) {
                 txtGpayAmount.setText("0.00");

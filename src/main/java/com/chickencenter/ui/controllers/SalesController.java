@@ -14,9 +14,7 @@ import javafx.collections.ObservableList;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.effect.GaussianBlur;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -36,7 +34,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class SalesController {
     @FXML private TableView<Sale> tblSales;
@@ -87,10 +84,6 @@ public class SalesController {
     private final ProductService productService;
     private final SecurityService securityService;
     private final ObservableList<Sale> salesList;
-    private final javafx.scene.layout.StackPane cashLockOverlay;
-    private final javafx.scene.layout.StackPane gpayLockOverlay;
-    private final javafx.scene.layout.StackPane productSummaryLockOverlay;
-    private final javafx.scene.layout.StackPane itemViewLockOverlay;
     private final ObservableList<Product> productList;
     private final ObservableList<Product> itemProductList;
     private final ObservableList<ItemSaleRecord> itemSaleList;
@@ -103,97 +96,21 @@ public class SalesController {
         this.productList = FXCollections.observableArrayList();
         this.itemProductList = FXCollections.observableArrayList();
         this.itemSaleList = FXCollections.observableArrayList();
-        this.cashLockOverlay = createLockOverlay();
-        this.gpayLockOverlay = createLockOverlay();
-        this.productSummaryLockOverlay = createLockOverlay();
-        this.itemViewLockOverlay = createLockOverlay();
-    }
-
-    private StackPane createLockOverlay() {
-
-        StackPane overlay = new StackPane();
-
-        overlay.setPickOnBounds(true);
-
-        overlay.setStyle(
-                "-fx-background-color: rgba(255,255,255,0.22);" +
-                        "-fx-background-radius: 16;" +
-                        "-fx-border-radius: 16;"
-        );
-
-        // glass effect
-        overlay.setEffect(new GaussianBlur(6));
-
-        VBox lockBox = new VBox();
-        lockBox.setAlignment(Pos.CENTER);
-
-        Label icon = new Label("🔒");
-
-        icon.setStyle(
-                "-fx-font-size: 34px;" +
-                        "-fx-text-fill: rgba(255,255,255,0.95);"
-        );
-
-        lockBox.getChildren().add(icon);
-
-        overlay.getChildren().add(lockBox);
-
-        StackPane.setAlignment(lockBox, Pos.CENTER);
-
-        overlay.setVisible(false);
-        overlay.setManaged(false);
-
-        return overlay;
-    }
-
-    private void wrapWithOverlay(VBox card, StackPane overlay) {
-        AnchorPane wrapper = new AnchorPane();
-        javafx.scene.layout.Pane parent = (javafx.scene.layout.Pane) card.getParent();
-        int idx = parent.getChildren().indexOf(card);
-        parent.getChildren().remove(card);
-        javafx.scene.shape.Rectangle clip = new javafx.scene.shape.Rectangle();
-        clip.setArcWidth(16);
-        clip.setArcHeight(16);
-        clip.widthProperty().bind(card.widthProperty());
-        clip.heightProperty().bind(card.heightProperty());
-        card.setClip(clip);
-        wrapper.getChildren().addAll(card, overlay);
-        AnchorPane.setTopAnchor(card, 0.0);
-        AnchorPane.setBottomAnchor(card, 0.0);
-        AnchorPane.setLeftAnchor(card, 0.0);
-        AnchorPane.setRightAnchor(card, 0.0);
-        AnchorPane.setTopAnchor(overlay, 0.0);
-        AnchorPane.setBottomAnchor(overlay, 0.0);
-        AnchorPane.setLeftAnchor(overlay, 0.0);
-        AnchorPane.setRightAnchor(overlay, 0.0);
-        parent.getChildren().add(idx, wrapper);
-        if (parent instanceof HBox) {
-            HBox.setHgrow(wrapper, javafx.scene.layout.Priority.ALWAYS);
-        }
     }
 
     private void updateSecurityLockUI() {
-
         boolean locked = SecurityService.lockEnabledProperty().get();
-
-        GaussianBlur blur = locked ? new GaussianBlur(12) : null;
-
-        cashCard.setEffect(blur);
-        gpayCard.setEffect(blur);
-        productSummaryCard.setEffect(blur);
-        itemViewContainer.setEffect(blur);
-
-        cashLockOverlay.setVisible(locked);
-        cashLockOverlay.setManaged(locked);
-
-        gpayLockOverlay.setVisible(locked);
-        gpayLockOverlay.setManaged(locked);
-
-        productSummaryLockOverlay.setVisible(locked);
-        productSummaryLockOverlay.setManaged(locked);
-
-        itemViewLockOverlay.setVisible(locked);
-        itemViewLockOverlay.setManaged(locked);
+        cashCard.setVisible(!locked);
+        cashCard.setManaged(!locked);
+        gpayCard.setVisible(!locked);
+        gpayCard.setManaged(!locked);
+        productSummaryCard.setVisible(!locked);
+        productSummaryCard.setManaged(!locked);
+        if (locked) {
+            showSaleView();
+        }
+        btnItemView.setVisible(!locked);
+        btnItemView.setManaged(!locked);
     }
 
     public static class ItemSaleRecord {
@@ -230,11 +147,6 @@ public class SalesController {
         SecurityService.lockEnabledProperty().addListener((obs, ov, nv) -> {
             Platform.runLater(this::updateSecurityLockUI);
         });
-
-        wrapWithOverlay(cashCard, cashLockOverlay);
-        wrapWithOverlay(gpayCard, gpayLockOverlay);
-        wrapWithOverlay(productSummaryCard, productSummaryLockOverlay);
-        wrapWithOverlay(itemViewContainer, itemViewLockOverlay);
 
         updateSecurityLockUI();
 
@@ -283,9 +195,6 @@ public class SalesController {
         saleViewContainer.setManaged(true);
         itemViewContainer.setVisible(false);
         itemViewContainer.setManaged(false);
-        javafx.scene.layout.Pane itemWrapper = (javafx.scene.layout.Pane) itemViewContainer.getParent();
-        itemWrapper.setVisible(false);
-        itemWrapper.setManaged(false);
         btnSaleView.setStyle(activeTabStyle);
         btnItemView.setStyle(inactiveTabStyle);
     }
@@ -294,9 +203,6 @@ public class SalesController {
     private void showItemView() {
         saleViewContainer.setVisible(false);
         saleViewContainer.setManaged(false);
-        javafx.scene.layout.Pane itemWrapper = (javafx.scene.layout.Pane) itemViewContainer.getParent();
-        itemWrapper.setVisible(true);
-        itemWrapper.setManaged(true);
         itemViewContainer.setVisible(true);
         itemViewContainer.setManaged(true);
         btnItemView.setStyle(activeTabStyle);

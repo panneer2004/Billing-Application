@@ -294,21 +294,6 @@ public class BillingService {
         return product != null ? product.getPrice() : 0;
     }
 
-    public double getAvailableStock(int itemId) throws SQLException {
-        Product product = productDAO.findById(itemId);
-        if (product == null) return 0;
-
-        String source = product.getProductSource();
-        if (source != null && source.equalsIgnoreCase("STOCK")) {
-            return product.getStock();
-        }
-
-        int effectiveId = getEffectiveProductId(product);
-        double totalPurchased = purchaseDAO.getTotalPurchasedQuantity(effectiveId);
-        double totalSold = saleItemDAO.getTotalSoldQuantityIncludingChildren(effectiveId);
-        return totalPurchased - totalSold;
-    }
-
     public List<Object[]> getItemSales(LocalDate fromDate, LocalDate toDate, Integer productId, Integer batchId) throws SQLException {
         return saleItemDAO.getItemSales(fromDate, toDate, productId, batchId);
     }

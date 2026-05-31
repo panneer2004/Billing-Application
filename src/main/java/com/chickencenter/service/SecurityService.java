@@ -1,12 +1,15 @@
 package com.chickencenter.service;
 
 import com.chickencenter.model.Account;
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.Alert;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class SecurityService {
@@ -17,10 +20,26 @@ public class SecurityService {
         Arrays.asList("purchase", "employees", "vendors")
     );
 
+    private static final List<Runnable> listeners = new ArrayList<>();
+
     private final AccountService accountService;
 
     public static BooleanProperty lockEnabledProperty() {
         return lockEnabled;
+    }
+
+    public static void addListener(Runnable listener) {
+        listeners.add(listener);
+    }
+
+    public static void removeListener(Runnable listener) {
+        listeners.remove(listener);
+    }
+
+    private static void notifyListeners() {
+        for (Runnable r : listeners) {
+            Platform.runLater(r);
+        }
     }
 
     public static void refreshLockState() {
@@ -28,6 +47,7 @@ public class SecurityService {
             AccountService svc = new AccountService();
             Account account = svc.getAccount();
             lockEnabled.set(account != null && account.isLocked());
+            notifyListeners();
         } catch (SQLException e) {
             e.printStackTrace();
             lockEnabled.set(false);

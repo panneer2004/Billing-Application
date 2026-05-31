@@ -5,6 +5,7 @@ import com.chickencenter.service.BillingService;
 import com.chickencenter.service.ExpenseService;
 import com.chickencenter.service.AccountService;
 import com.chickencenter.service.SecurityService;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -86,6 +87,21 @@ public class MainController {
             }
         });
         showDashboard();
+
+        SecurityService.lockEnabledProperty().addListener((obs, ov, nv) -> {
+            Platform.runLater(this::refreshSecurityUI);
+        });
+        refreshSecurityUI();
+    }
+
+    private void refreshSecurityUI() {
+        boolean locked = SecurityService.lockEnabledProperty().get();
+        btnPurchase.setVisible(!locked);
+        btnPurchase.setManaged(!locked);
+        btnVendors.setVisible(!locked);
+        btnVendors.setManaged(!locked);
+        btnEmployees.setVisible(!locked);
+        btnEmployees.setManaged(!locked);
     }
 
     public void refreshDashboardData() {
@@ -199,7 +215,6 @@ public class MainController {
 
     @FXML
     private void showExpenses() {
-        if (!securityService.checkSecurityAccess("expenses")) return;
         loadView("/com/chickencenter/ui/views/expenses-view.fxml", btnExpenses);
     }
 

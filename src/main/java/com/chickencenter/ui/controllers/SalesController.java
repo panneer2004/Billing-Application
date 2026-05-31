@@ -90,6 +90,7 @@ public class SalesController {
     private final javafx.scene.layout.StackPane cashLockOverlay;
     private final javafx.scene.layout.StackPane gpayLockOverlay;
     private final javafx.scene.layout.StackPane productSummaryLockOverlay;
+    private final javafx.scene.layout.StackPane itemViewLockOverlay;
     private final ObservableList<Product> productList;
     private final ObservableList<Product> itemProductList;
     private final ObservableList<ItemSaleRecord> itemSaleList;
@@ -105,6 +106,7 @@ public class SalesController {
         this.cashLockOverlay = createLockOverlay();
         this.gpayLockOverlay = createLockOverlay();
         this.productSummaryLockOverlay = createLockOverlay();
+        this.itemViewLockOverlay = createLockOverlay();
     }
 
     private StackPane createLockOverlay() {
@@ -179,6 +181,7 @@ public class SalesController {
         cashCard.setEffect(blur);
         gpayCard.setEffect(blur);
         productSummaryCard.setEffect(blur);
+        itemViewContainer.setEffect(blur);
 
         cashLockOverlay.setVisible(locked);
         cashLockOverlay.setManaged(locked);
@@ -188,6 +191,9 @@ public class SalesController {
 
         productSummaryLockOverlay.setVisible(locked);
         productSummaryLockOverlay.setManaged(locked);
+
+        itemViewLockOverlay.setVisible(locked);
+        itemViewLockOverlay.setManaged(locked);
     }
 
     public static class ItemSaleRecord {
@@ -228,6 +234,7 @@ public class SalesController {
         wrapWithOverlay(cashCard, cashLockOverlay);
         wrapWithOverlay(gpayCard, gpayLockOverlay);
         wrapWithOverlay(productSummaryCard, productSummaryLockOverlay);
+        wrapWithOverlay(itemViewContainer, itemViewLockOverlay);
 
         updateSecurityLockUI();
 
@@ -276,6 +283,9 @@ public class SalesController {
         saleViewContainer.setManaged(true);
         itemViewContainer.setVisible(false);
         itemViewContainer.setManaged(false);
+        javafx.scene.layout.Pane itemWrapper = (javafx.scene.layout.Pane) itemViewContainer.getParent();
+        itemWrapper.setVisible(false);
+        itemWrapper.setManaged(false);
         btnSaleView.setStyle(activeTabStyle);
         btnItemView.setStyle(inactiveTabStyle);
     }
@@ -284,6 +294,9 @@ public class SalesController {
     private void showItemView() {
         saleViewContainer.setVisible(false);
         saleViewContainer.setManaged(false);
+        javafx.scene.layout.Pane itemWrapper = (javafx.scene.layout.Pane) itemViewContainer.getParent();
+        itemWrapper.setVisible(true);
+        itemWrapper.setManaged(true);
         itemViewContainer.setVisible(true);
         itemViewContainer.setManaged(true);
         btnItemView.setStyle(activeTabStyle);

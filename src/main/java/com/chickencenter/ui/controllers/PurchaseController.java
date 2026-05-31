@@ -258,17 +258,19 @@ public class PurchaseController {
         selectedPurchase = p;
         isEditMode = true;
 
-        txtVendorName.setText(p.getVendorName());
-        txtQuantity.setText(String.valueOf(p.getBatchQuantity()));
-        txtRate.setText(String.valueOf(p.getRate()));
-        calculateTotal();
-
         for (PurchaseDAO.ProductWithVendor prod : productList) {
             if (prod.getId() == p.getItemId()) {
                 cmbProduct.setValue(prod);
                 break;
             }
         }
+
+        txtVendorName.setText(p.getVendorName());
+        txtQuantity.setText(String.valueOf(p.getBatchQuantity()));
+        txtRate.setText(String.valueOf(p.getRate()));
+        calculateTotal();
+
+        System.out.println("[Edit Purchase] Product: " + p.getProductName() + " | Qty: " + p.getBatchQuantity() + " | Rate: " + p.getRate());
 
         cmbProduct.setDisable(true);
         btnPurchase.setText("Update");
